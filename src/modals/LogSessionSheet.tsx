@@ -25,7 +25,7 @@ export function LogSessionSheet({ exercise, open, onClose }: LogSessionSheetProp
 
   return (
     <BottomSheet open={open} onClose={onClose}>
-      <RepCounter exerciseName={exercise.name} onSave={handleSave} />
+      <RepCounter exerciseName={exercise.name} onSave={handleSave} color={exercise.color} />
     </BottomSheet>
   )
 }
