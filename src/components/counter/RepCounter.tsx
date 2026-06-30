@@ -68,6 +68,7 @@ export function RepCounter({ onSave, exerciseName, color = '#0EA5A2' }: RepCount
         <CircularDial
           size={dialSize}
           strokeWidth={6}
+          count={count}
           onIncrement={increment}
           onDecrement={decrement}
           color={color}

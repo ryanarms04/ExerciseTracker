@@ -1,15 +1,16 @@
 import { useRef, useCallback, useState, useEffect } from 'react'
-import { motion } from 'motion/react'
 
 interface CircularDialProps {
   size: number
   strokeWidth: number
+  count: number
   onIncrement: () => void
   onDecrement: () => void
   color?: string
 }
 
 const DEGREES_PER_REP = 36
+const REPS_PER_SPIN = 10
 const TWO_PI = Math.PI * 2
 const HALF_PI = Math.PI / 2
 
@@ -35,6 +36,7 @@ function describeArc(cx: number, cy: number, r: number, startAngle: number, endA
 export function CircularDial({
   size,
   strokeWidth,
+  count,
   onIncrement,
   onDecrement,
   color = '#0EA5A2',
@@ -43,12 +45,15 @@ export function CircularDial({
   const isDragging = useRef(false)
   const lastAngle = useRef(0)
   const accumulated = useRef(0)
-  const [arcProgress, setArcProgress] = useState(0)
   const [active, setActive] = useState(false)
-  const [thumbAngle, setThumbAngle] = useState(-HALF_PI)
 
   const radius = (size - strokeWidth) / 2
   const center = size / 2
+
+  const repsInSpin = count % REPS_PER_SPIN
+  const progressFraction = repsInSpin / REPS_PER_SPIN
+  const progressRadians = progressFraction * TWO_PI
+  const thumbAngle = -HALF_PI + progressRadians
 
   const getAngle = useCallback(
     (clientX: number, clientY: number) => {
@@ -68,7 +73,6 @@ export function CircularDial({
       lastAngle.current = getAngle(clientX, clientY)
       accumulated.current = 0
       setActive(true)
-      setThumbAngle(lastAngle.current)
     },
     [getAngle],
   )
@@ -85,7 +89,6 @@ export function CircularDial({
 
       accumulated.current += delta
       lastAngle.current = angle
-      setThumbAngle(angle)
 
       const degreesMoved = (accumulated.current * 180) / Math.PI
       const reps = Math.floor(Math.abs(degreesMoved) / DEGREES_PER_REP)
@@ -100,9 +103,6 @@ export function CircularDial({
         if (degreesMoved > 0) accumulated.current -= consumedRad
         else accumulated.current += consumedRad
       }
-
-      const progressDeg = (accumulated.current * 180) / Math.PI
-      setArcProgress(progressDeg / DEGREES_PER_REP)
     },
     [getAngle, onIncrement, onDecrement],
   )
@@ -110,7 +110,6 @@ export function CircularDial({
   const handleEnd = useCallback(() => {
     isDragging.current = false
     accumulated.current = 0
-    setArcProgress(0)
     setActive(false)
   }, [])
 
@@ -160,11 +159,8 @@ export function CircularDial({
     }
   }, [radius, strokeWidth, size, handleStart, handleMove, handleEnd])
 
-  const startAngle = -HALF_PI
-  const progressAngle = arcProgress * ((DEGREES_PER_REP * Math.PI) / 180)
-  const showArc = active && Math.abs(arcProgress) > 0.05
-
   const thumb = polarToCartesian(center, center, radius, thumbAngle)
+  const showArc = repsInSpin > 0
 
   const tickCount = 12
   const ticks = Array.from({ length: tickCount }, (_, i) => {
@@ -209,13 +205,7 @@ export function CircularDial({
 
         {showArc && (
           <path
-            d={describeArc(
-              center,
-              center,
-              radius,
-              progressAngle > 0 ? startAngle : startAngle + progressAngle,
-              progressAngle > 0 ? startAngle + progressAngle : startAngle,
-            )}
+            d={describeArc(center, center, radius, -HALF_PI, thumbAngle)}
             fill="none"
             stroke={color}
             strokeWidth={strokeWidth + 2}
@@ -224,21 +214,15 @@ export function CircularDial({
           />
         )}
 
-        {active && (
-          <motion.circle
-            cx={thumb.x}
-            cy={thumb.y}
-            r={strokeWidth * 1.8}
-            fill={color}
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="drop-shadow-lg"
-            style={{ filter: `drop-shadow(0 0 8px ${color}80)` }}
-          />
-        )}
+        <circle
+          cx={thumb.x}
+          cy={thumb.y}
+          r={active ? strokeWidth * 2 : strokeWidth * 1.5}
+          fill={color}
+          style={{ filter: `drop-shadow(0 0 ${active ? 8 : 4}px ${color}80)`, transition: 'r 0.15s ease' }}
+        />
       </svg>
 
-      {/* Transparent overlay for touch/pointer events — sits below buttons via z-index */}
       <div
         ref={overlayRef}
         className="absolute inset-0 m-auto z-0 touch-none"
