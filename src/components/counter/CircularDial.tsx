@@ -9,7 +9,7 @@ interface CircularDialProps {
   color?: string
 }
 
-const DEGREES_PER_REP = 30
+const DEGREES_PER_REP = 36
 const TWO_PI = Math.PI * 2
 const HALF_PI = Math.PI / 2
 
