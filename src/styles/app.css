@@ -130,8 +130,8 @@ body {
   background-size: 128px 128px;
 }
 
-.diagonal-clip {
-  clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+.hero-bottom {
+  border-radius: 0 0 24px 24px;
 }
 
 .scrollbar-hide {

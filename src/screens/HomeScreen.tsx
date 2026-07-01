@@ -7,28 +7,34 @@ import { db } from '../db/database'
 import { Card } from '../components/ui/Card'
 import { DynamicIcon } from '../components/ui/DynamicIcon'
 import { StreakDots } from '../components/charts/StreakDots'
+import { DateStrip } from '../components/navigation/DateStrip'
 import { LogSessionSheet } from '../modals/LogSessionSheet'
 import { useSettingsStore } from '../stores/settingsStore'
-import { getGreeting, todayStr, relativeTime } from '../lib/dateUtils'
+import { getGreeting, todayStr, relativeTime, formatDate } from '../lib/dateUtils'
 import type { Exercise } from '../types'
 
 export function HomeScreen() {
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null)
+  const [selectedDate, setSelectedDate] = useState(todayStr())
   const userName = useSettingsStore((s) => s.userName)
   const dailyGoal = useSettingsStore((s) => s.dailyGoal)
+  const isToday = selectedDate === todayStr()
 
   const exercises = useLiveQuery(async () => {
     const all = await db.exercises.toArray()
     return all.filter((e) => !e.isArchived)
   })
 
-  const todaySessions = useLiveQuery(async () => {
-    const today = todayStr()
-    return db.sessions.where('date').equals(today).toArray()
-  })
+  const dateSessions = useLiveQuery(async () => {
+    return db.sessions.where('date').equals(selectedDate).toArray()
+  }, [selectedDate])
 
   const recentSessions = useLiveQuery(async () => {
-    const sessions = await db.sessions.orderBy('createdAt').reverse().limit(10).toArray()
+    const sessions = await db.sessions
+      .where('date')
+      .equals(selectedDate)
+      .reverse()
+      .sortBy('createdAt')
     const exerciseMap = new Map<number, Exercise>()
     for (const s of sessions) {
       if (!exerciseMap.has(s.exerciseId)) {
@@ -40,15 +46,15 @@ export function HomeScreen() {
       ...s,
       exercise: exerciseMap.get(s.exerciseId),
     }))
-  })
+  }, [selectedDate])
 
-  const todayTotal = todaySessions?.reduce((sum, s) => sum + s.reps, 0) ?? 0
-  const goalProgress = Math.min((todayTotal / dailyGoal) * 100, 100)
+  const dateTotal = dateSessions?.reduce((sum, s) => sum + s.reps, 0) ?? 0
+  const goalProgress = Math.min((dateTotal / dailyGoal) * 100, 100)
 
   return (
     <>
-      <div className="relative noise-overlay diagonal-clip bg-gradient-to-br from-navy-900 via-navy-900 to-teal-900 px-5 pt-14 pb-16">
-        <div className="flex items-start justify-between mb-6">
+      <div className="relative noise-overlay hero-bottom bg-gradient-to-br from-navy-900 via-navy-900 to-teal-900 px-5 pt-14 pb-5">
+        <div className="flex items-start justify-between mb-4">
           <div>
             <p className="text-navy-400 text-sm font-medium">{getGreeting()}</p>
             <h1 className="font-display text-2xl font-bold text-white mt-0.5">
@@ -65,14 +71,16 @@ export function HomeScreen() {
 
         <div className="text-center">
           <motion.p
-            key={todayTotal}
+            key={dateTotal}
             initial={{ scale: 0.95, opacity: 0.7 }}
             animate={{ scale: 1, opacity: 1 }}
             className="font-mono text-[64px] leading-none font-medium tracking-[-0.03em] text-white"
           >
-            {todayTotal}
+            {dateTotal}
           </motion.p>
-          <p className="text-navy-400 text-sm mt-1">reps today</p>
+          <p className="text-navy-400 text-sm mt-1">
+            {isToday ? 'reps today' : `reps on ${formatDate(selectedDate)}`}
+          </p>
           <div className="mt-3 mx-auto w-48 h-1.5 rounded-full bg-white/10 overflow-hidden">
             <motion.div
               className="h-full rounded-full bg-teal-400"
@@ -82,12 +90,14 @@ export function HomeScreen() {
             />
           </div>
           <p className="text-navy-500 text-xs mt-1.5">
-            {todayTotal} / {dailyGoal} daily goal
+            {dateTotal} / {dailyGoal} daily goal
           </p>
         </div>
       </div>
 
-      <div className="px-5 -mt-6 space-y-5">
+      <DateStrip selectedDate={selectedDate} onSelect={setSelectedDate} />
+
+      <div className="px-5 space-y-5">
         <Card className="p-4">
           <h2 className="font-display text-sm font-bold text-navy-900 dark:text-white mb-3 uppercase tracking-wide">
             Quick Log
@@ -122,7 +132,7 @@ export function HomeScreen() {
 
         <div>
           <h2 className="font-display text-sm font-bold text-navy-900 dark:text-white mb-3 uppercase tracking-wide px-1">
-            Recent Activity
+            {isToday ? 'Recent Activity' : `Activity — ${formatDate(selectedDate)}`}
           </h2>
           {(!recentSessions || recentSessions.length === 0) ? (
             <Card className="p-6 text-center">
