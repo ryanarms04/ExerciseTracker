@@ -4,6 +4,7 @@ import { db } from '../db/database'
 import { useSettingsStore } from '../stores/settingsStore'
 import { ACHIEVEMENTS } from '../lib/achievements'
 import { todayStr } from '../lib/dateUtils'
+import { computeStreak } from '../lib/streak'
 import type { AchievementStats } from '../types'
 
 export function useAchievements() {
@@ -40,23 +41,10 @@ export function useAchievements() {
     }
     const bestDay = Math.max(...repsByDate.values())
 
-    const dates = [...new Set(allSessions.map((s) => s.date))].sort().reverse()
-    let currentStreak = 0
-    const cursor = new Date()
-    const todayCheck = cursor.toISOString().split('T')[0]
-    const yesterdayDate = new Date(cursor)
-    yesterdayDate.setDate(cursor.getDate() - 1)
-    const yesterdayCheck = yesterdayDate.toISOString().split('T')[0]
-
-    if (dates[0] === todayCheck || dates[0] === yesterdayCheck) {
-      const start = dates[0] === todayCheck ? new Date() : yesterdayDate
-      for (const d of dates) {
-        if (d === start.toISOString().split('T')[0]) {
-          currentStreak++
-          start.setDate(start.getDate() - 1)
-        } else break
-      }
-    }
+    const currentStreak = computeStreak(
+      allSessions.map((s) => s.date),
+      today,
+    ).current
 
     const loggedBefore7am = allSessions.some((s) => {
       const h = new Date(s.createdAt).getHours()
