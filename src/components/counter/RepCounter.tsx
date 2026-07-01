@@ -119,8 +119,8 @@ export function RepCounter({ onSave, exerciseName, color = '#0EA5A2' }: RepCount
           <button onClick={() => adjustCount(-10)} disabled={count === 0} className={`${subChip} disabled:opacity-30`}>
             −10
           </button>
-          <button onClick={() => adjustCount(-1)} disabled={count === 0} className={`${subChip} disabled:opacity-30`}>
-            −1
+          <button onClick={() => adjustCount(-5)} disabled={count === 0} className={`${subChip} disabled:opacity-30`}>
+            −5
           </button>
           <button onClick={resetCount} disabled={count === 0} className={`${subChip} disabled:opacity-30 flex items-center gap-1`}>
             <RotateCcw size={13} />
