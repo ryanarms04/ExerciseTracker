@@ -13,6 +13,25 @@ class ExerciseTrackerDB extends Dexie {
       sessions: '++id, exerciseId, date, createdAt',
       achievements: '++id, key, unlockedAt',
     })
+
+    // Dedupe before v3 makes `key` unique — building a unique index over
+    // existing duplicates would abort the upgrade and brick the DB.
+    this.version(2).upgrade(async (tx) => {
+      const all = await tx.table('achievements').toArray()
+      const seen = new Set<string>()
+      const dupeIds: number[] = []
+      for (const a of all) {
+        if (seen.has(a.key)) dupeIds.push(a.id)
+        else seen.add(a.key)
+      }
+      if (dupeIds.length > 0) {
+        await tx.table('achievements').bulkDelete(dupeIds)
+      }
+    })
+
+    this.version(3).stores({
+      achievements: '++id, &key, unlockedAt',
+    })
   }
 }
 

@@ -30,24 +30,52 @@ export function SettingsScreen() {
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0]
       if (!file) return
-      const text = await file.text()
-      const data = JSON.parse(text)
-      if (data.exercises) {
-        await db.exercises.clear()
-        await db.exercises.bulkAdd(data.exercises)
-      }
-      if (data.sessions) {
-        await db.sessions.clear()
-        await db.sessions.bulkAdd(data.sessions)
-      }
-      if (data.achievements) {
-        await db.achievements.clear()
-        await db.achievements.bulkAdd(data.achievements)
-      }
-      if (data.settings) {
-        if (data.settings.userName) setUserName(data.settings.userName)
-        if (data.settings.dailyGoal) setDailyGoal(data.settings.dailyGoal)
-        if (data.settings.theme) setTheme(data.settings.theme)
+      try {
+        const data = JSON.parse(await file.text())
+
+        if (!Array.isArray(data?.exercises) || !Array.isArray(data?.sessions)) {
+          throw new Error('not a valid ExerciseTracker backup')
+        }
+        const exercisesValid = data.exercises.every(
+          (x: unknown) => typeof (x as { name?: unknown })?.name === 'string',
+        )
+        const sessionsValid = data.sessions.every(
+          (x: unknown) =>
+            typeof (x as { reps?: unknown })?.reps === 'number' &&
+            typeof (x as { date?: unknown })?.date === 'string',
+        )
+        if (!exercisesValid || !sessionsValid) {
+          throw new Error('backup contains invalid records')
+        }
+
+        const ok = window.confirm(
+          `Replace ALL current data with this backup (${data.sessions.length} sessions, ${data.exercises.length} exercises)? This cannot be undone.`,
+        )
+        if (!ok) return
+
+        await db.transaction('rw', db.exercises, db.sessions, db.achievements, async () => {
+          await Promise.all([db.exercises.clear(), db.sessions.clear(), db.achievements.clear()])
+          await db.exercises.bulkAdd(data.exercises)
+          await db.sessions.bulkAdd(data.sessions)
+          if (Array.isArray(data.achievements)) {
+            // Dedupe by key: backups from before the unique index may carry doubles
+            const unique = [...new Map(
+              data.achievements.map((a: { key: string }) => [a.key, a]),
+            ).values()]
+            await db.achievements.bulkAdd(unique as typeof data.achievements)
+          }
+        })
+
+        if (data.settings) {
+          if (data.settings.userName) setUserName(data.settings.userName)
+          if (data.settings.dailyGoal) setDailyGoal(data.settings.dailyGoal)
+          if (data.settings.theme) setTheme(data.settings.theme)
+        }
+        window.alert('Import complete.')
+      } catch (err) {
+        window.alert(
+          `Import failed: ${err instanceof Error ? err.message : 'unknown error'}. No data was changed.`,
+        )
       }
     }
     input.click()

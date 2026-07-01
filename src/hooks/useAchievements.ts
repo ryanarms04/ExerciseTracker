@@ -74,10 +74,16 @@ export function useAchievements() {
 
     for (const achievement of ACHIEVEMENTS) {
       if (!unlockedKeys.has(achievement.key) && achievement.rule(stats)) {
-        db.achievements.add({
-          key: achievement.key,
-          unlockedAt: new Date().toISOString(),
-        })
+        db.achievements
+          .add({
+            key: achievement.key,
+            unlockedAt: new Date().toISOString(),
+          })
+          .catch((err) => {
+            // &key unique index rejects concurrent double-unlocks (StrictMode,
+            // multiple tabs) — that rejection is the desired outcome.
+            if (err?.name !== 'ConstraintError') console.error(err)
+          })
       }
     }
   }, [stats, unlocked])
