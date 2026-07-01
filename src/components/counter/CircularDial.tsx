@@ -1,4 +1,5 @@
 import { useRef, useCallback, useState, useEffect } from 'react'
+import { motion, useSpring, useTransform } from 'motion/react'
 
 interface CircularDialProps {
   size: number
@@ -13,24 +14,13 @@ const DEGREES_PER_REP = 36
 const REPS_PER_SPIN = 10
 const TWO_PI = Math.PI * 2
 const HALF_PI = Math.PI / 2
+const RAD_PER_REP = (DEGREES_PER_REP * Math.PI) / 180
 
 function polarToCartesian(cx: number, cy: number, r: number, angle: number) {
   return {
     x: cx + r * Math.cos(angle),
     y: cy + r * Math.sin(angle),
   }
-}
-
-function describeArc(cx: number, cy: number, r: number, startAngle: number, endAngle: number) {
-  let sweep = endAngle - startAngle
-  if (sweep < 0) sweep += TWO_PI
-  if (sweep > TWO_PI) sweep = TWO_PI - 0.001
-
-  const largeArc = sweep > Math.PI ? 1 : 0
-  const start = polarToCartesian(cx, cy, r, startAngle)
-  const end = polarToCartesian(cx, cy, r, endAngle)
-
-  return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 1 ${end.x} ${end.y}`
 }
 
 export function CircularDial({
@@ -46,14 +36,37 @@ export function CircularDial({
   const lastAngle = useRef(0)
   const accumulated = useRef(0)
   const [active, setActive] = useState(false)
+  const [dragPartial, setDragPartial] = useState(0)
 
-  const radius = (size - strokeWidth) / 2
+  const dotRadius = strokeWidth * 1.8
+  const padding = dotRadius + 2
+  const radius = (size - padding * 2) / 2
   const center = size / 2
+  const circumference = TWO_PI * radius
 
   const repsInSpin = count % REPS_PER_SPIN
-  const progressFraction = repsInSpin / REPS_PER_SPIN
-  const progressRadians = progressFraction * TWO_PI
-  const thumbAngle = -HALF_PI + progressRadians
+  const effectiveReps = repsInSpin + (active ? dragPartial : 0)
+  const progressFraction = Math.max(0, Math.min(effectiveReps / REPS_PER_SPIN, 0.9999))
+
+  const springProgress = useSpring(progressFraction, {
+    stiffness: 300,
+    damping: 30,
+  })
+
+  useEffect(() => {
+    springProgress.set(progressFraction)
+  }, [progressFraction, springProgress])
+
+  const dashOffset = useTransform(springProgress, (v) => circumference * (1 - v))
+
+  const thumbCx = useTransform(springProgress, (v) => {
+    const angle = -HALF_PI + v * TWO_PI
+    return center + radius * Math.cos(angle)
+  })
+  const thumbCy = useTransform(springProgress, (v) => {
+    const angle = -HALF_PI + v * TWO_PI
+    return center + radius * Math.sin(angle)
+  })
 
   const getAngle = useCallback(
     (clientX: number, clientY: number) => {
@@ -72,6 +85,7 @@ export function CircularDial({
       isDragging.current = true
       lastAngle.current = getAngle(clientX, clientY)
       accumulated.current = 0
+      setDragPartial(0)
       setActive(true)
     },
     [getAngle],
@@ -99,10 +113,13 @@ export function CircularDial({
           if (isClockwise) onIncrement()
           else onDecrement()
         }
-        const consumedRad = reps * ((DEGREES_PER_REP * Math.PI) / 180)
+        const consumedRad = reps * RAD_PER_REP
         if (degreesMoved > 0) accumulated.current -= consumedRad
         else accumulated.current += consumedRad
       }
+
+      const partialReps = accumulated.current / RAD_PER_REP
+      setDragPartial(partialReps)
     },
     [getAngle, onIncrement, onDecrement],
   )
@@ -110,6 +127,7 @@ export function CircularDial({
   const handleEnd = useCallback(() => {
     isDragging.current = false
     accumulated.current = 0
+    setDragPartial(0)
     setActive(false)
   }, [])
 
@@ -123,8 +141,8 @@ export function CircularDial({
       const cy = rect.top + rect.height / 2
       const dist = Math.hypot(clientX - cx, clientY - cy)
       const scale = rect.width / size
-      const ringInner = (radius - strokeWidth * 2.5) * scale
-      const ringOuter = (radius + strokeWidth * 2.5) * scale
+      const ringInner = (radius - strokeWidth * 3) * scale
+      const ringOuter = (radius + strokeWidth * 3) * scale
       return dist >= ringInner && dist <= ringOuter
     }
 
@@ -159,12 +177,8 @@ export function CircularDial({
     }
   }, [radius, strokeWidth, size, handleStart, handleMove, handleEnd])
 
-  const thumb = polarToCartesian(center, center, radius, thumbAngle)
-  const showArc = repsInSpin > 0
-
-  const tickCount = 12
-  const ticks = Array.from({ length: tickCount }, (_, i) => {
-    const a = (i / tickCount) * TWO_PI - HALF_PI
+  const ticks = Array.from({ length: REPS_PER_SPIN }, (_, i) => {
+    const a = (i / REPS_PER_SPIN) * TWO_PI - HALF_PI
     const inner = polarToCartesian(center, center, radius - strokeWidth * 0.8, a)
     const outer = polarToCartesian(center, center, radius + strokeWidth * 0.8, a)
     return { x1: inner.x, y1: inner.y, x2: outer.x, y2: outer.y }
@@ -203,23 +217,25 @@ export function CircularDial({
           />
         ))}
 
-        {showArc && (
-          <path
-            d={describeArc(center, center, radius, -HALF_PI, thumbAngle)}
-            fill="none"
-            stroke={color}
-            strokeWidth={strokeWidth + 2}
-            strokeLinecap="round"
-            opacity={0.7}
-          />
-        )}
+        <motion.circle
+          cx={center}
+          cy={center}
+          r={radius}
+          fill="none"
+          stroke={color}
+          strokeWidth={strokeWidth + 2}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          style={{ strokeDashoffset: dashOffset }}
+          transform={`rotate(-90 ${center} ${center})`}
+          opacity={0.7}
+        />
 
-        <circle
-          cx={thumb.x}
-          cy={thumb.y}
-          r={active ? strokeWidth * 2 : strokeWidth * 1.5}
+        <motion.circle
+          style={{ cx: thumbCx, cy: thumbCy }}
+          r={active ? dotRadius * 1.3 : dotRadius}
           fill={color}
-          style={{ filter: `drop-shadow(0 0 ${active ? 8 : 4}px ${color}80)`, transition: 'r 0.15s ease' }}
+          filter={`drop-shadow(0 0 ${active ? 8 : 4}px ${color}80)`}
         />
       </svg>
 
