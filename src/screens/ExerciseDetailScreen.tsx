@@ -111,11 +111,13 @@ export function ExerciseDetailScreen() {
                     </div>
                     <button
                       onClick={async () => {
+                        if (!window.confirm(`Delete ${s.reps} reps logged on ${formatDate(s.date)}?`)) return
                         await db.sessions.delete(s.id!)
                       }}
-                      className="w-8 h-8 flex items-center justify-center rounded-lg text-navy-300 hover:text-coral-500 hover:bg-coral-50 dark:hover:bg-coral-900/20 transition-colors"
+                      aria-label={`Delete ${s.reps} reps on ${formatDate(s.date)}`}
+                      className="w-11 h-11 flex items-center justify-center rounded-lg text-navy-300 hover:text-coral-500 hover:bg-coral-50 dark:hover:bg-coral-900/20 transition-colors"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={16} />
                     </button>
                   </Card>
                 </motion.div>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion } from 'motion/react'
 import { Settings } from 'lucide-react'
@@ -16,9 +16,28 @@ import type { Exercise } from '../types'
 export function HomeScreen() {
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null)
   const [selectedDate, setSelectedDate] = useState(todayStr())
+  const lastKnownToday = useRef(todayStr())
   const userName = useSettingsStore((s) => s.userName)
   const dailyGoal = useSettingsStore((s) => s.dailyGoal)
   const isToday = selectedDate === todayStr()
+
+  // A resumed PWA keeps state across midnight — follow the day forward,
+  // but leave a deliberately selected past date alone.
+  useEffect(() => {
+    function refreshToday() {
+      const now = todayStr()
+      const prevToday = lastKnownToday.current
+      if (now === prevToday) return
+      lastKnownToday.current = now
+      setSelectedDate((sel) => (sel === prevToday ? now : sel))
+    }
+    document.addEventListener('visibilitychange', refreshToday)
+    window.addEventListener('focus', refreshToday)
+    return () => {
+      document.removeEventListener('visibilitychange', refreshToday)
+      window.removeEventListener('focus', refreshToday)
+    }
+  }, [])
 
   const exercises = useLiveQuery(async () => {
     const all = await db.exercises.toArray()
@@ -182,6 +201,7 @@ export function HomeScreen() {
         exercise={selectedExercise}
         open={!!selectedExercise}
         onClose={() => setSelectedExercise(null)}
+        initialDate={selectedDate}
       />
     </>
   )

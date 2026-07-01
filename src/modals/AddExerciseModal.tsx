@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { BottomSheet } from '../components/ui/BottomSheet'
 import { Button } from '../components/ui/Button'
+import { DynamicIcon } from '../components/ui/DynamicIcon'
 import { db } from '../db/database'
 import type { ExerciseCategory } from '../types'
 
@@ -95,13 +96,14 @@ export function AddExerciseModal({ open, onClose }: AddExerciseModalProps) {
               <button
                 key={ic}
                 onClick={() => setIcon(ic)}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm transition-all ${
+                aria-label={`Icon: ${ic}`}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
                   icon === ic
                     ? 'bg-teal-500 text-white ring-2 ring-teal-300'
                     : 'bg-navy-100 dark:bg-navy-800 text-navy-600 dark:text-navy-400'
                 }`}
               >
-                {ic.charAt(0).toUpperCase()}
+                <DynamicIcon name={ic} size={18} />
               </button>
             ))}
           </div>
@@ -116,6 +118,7 @@ export function AddExerciseModal({ open, onClose }: AddExerciseModalProps) {
               <button
                 key={c}
                 onClick={() => setColor(c)}
+                aria-label={`Color ${c}`}
                 className={`w-9 h-9 rounded-full transition-transform ${
                   color === c ? 'scale-110 ring-2 ring-offset-2 ring-offset-white dark:ring-offset-navy-900' : ''
                 }`}

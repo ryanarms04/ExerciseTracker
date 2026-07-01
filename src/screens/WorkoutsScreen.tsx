@@ -111,12 +111,21 @@ export function WorkoutsScreen() {
                             {reps} today
                           </p>
                         )}
+                        {!isHero && (
+                          <Link
+                            to={`/exercise/${ex.id}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-block text-xs text-navy-400 hover:text-teal-500 transition-colors mt-1 px-2 py-1"
+                          >
+                            Details →
+                          </Link>
+                        )}
                       </div>
                       {isHero && (
                         <Link
                           to={`/exercise/${ex.id}`}
                           onClick={(e) => e.stopPropagation()}
-                          className="text-xs text-navy-400 hover:text-teal-500 transition-colors"
+                          className="text-xs text-navy-400 hover:text-teal-500 transition-colors px-2 py-2"
                         >
                           Details →
                         </Link>
