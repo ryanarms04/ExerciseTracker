@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react'
 import { motion, useAnimation } from 'motion/react'
-import { Minus, Plus } from 'lucide-react'
+import { Minus, Plus, RotateCcw } from 'lucide-react'
 import { useHaptic } from '../../hooks/useHaptic'
 import { Button } from '../ui/Button'
 import { CircularDial } from './CircularDial'
@@ -10,8 +10,6 @@ interface RepCounterProps {
   exerciseName: string
   color?: string
 }
-
-const QUICK_ADDS = [5, 10, 25]
 
 export function RepCounter({ onSave, exerciseName, color = '#0EA5A2' }: RepCounterProps) {
   const [count, setCount] = useState(0)
@@ -37,9 +35,9 @@ export function RepCounter({ onSave, exerciseName, color = '#0EA5A2' }: RepCount
     haptic.tick()
   }, [haptic])
 
-  const quickAdd = useCallback(
+  const adjustCount = useCallback(
     (n: number) => {
-      setCount((c) => c + n)
+      setCount((c) => Math.max(0, c + n))
       haptic.tick()
       controls.start({
         scale: [1, 1.1, 1],
@@ -49,6 +47,11 @@ export function RepCounter({ onSave, exerciseName, color = '#0EA5A2' }: RepCount
     [controls, haptic],
   )
 
+  const resetCount = useCallback(() => {
+    setCount(0)
+    haptic.tick()
+  }, [haptic])
+
   const handleSave = useCallback(() => {
     if (count === 0) return
     haptic.success()
@@ -57,6 +60,9 @@ export function RepCounter({ onSave, exerciseName, color = '#0EA5A2' }: RepCount
   }, [count, onSave, haptic])
 
   const dialSize = 220
+  const chipBase = 'px-3.5 py-2 rounded-full text-sm font-semibold transition-colors'
+  const addChip = `${chipBase} bg-navy-100 dark:bg-navy-800 text-navy-700 dark:text-navy-300 hover:bg-teal-50 hover:text-teal-600 dark:hover:bg-teal-900/30 dark:hover:text-teal-400`
+  const subChip = `${chipBase} bg-navy-100 dark:bg-navy-800 text-navy-700 dark:text-navy-300 hover:bg-coral-50 hover:text-coral-500 dark:hover:bg-coral-900/20 dark:hover:text-coral-400`
 
   return (
     <div className="flex flex-col items-center gap-6">
@@ -108,16 +114,24 @@ export function RepCounter({ onSave, exerciseName, color = '#0EA5A2' }: RepCount
         Drag the ring to count
       </p>
 
-      <div className="flex gap-2">
-        {QUICK_ADDS.map((n) => (
-          <button
-            key={n}
-            onClick={() => quickAdd(n)}
-            className="px-4 py-2 rounded-full text-sm font-semibold bg-navy-100 dark:bg-navy-800 text-navy-700 dark:text-navy-300 hover:bg-teal-50 hover:text-teal-600 dark:hover:bg-teal-900/30 dark:hover:text-teal-400 transition-colors"
-          >
-            +{n}
+      <div className="flex flex-col items-center gap-2">
+        <div className="flex gap-2">
+          <button onClick={() => adjustCount(-10)} disabled={count === 0} className={`${subChip} disabled:opacity-30`}>
+            −10
           </button>
-        ))}
+          <button onClick={() => adjustCount(-1)} disabled={count === 0} className={`${subChip} disabled:opacity-30`}>
+            −1
+          </button>
+          <button onClick={resetCount} disabled={count === 0} className={`${subChip} disabled:opacity-30 flex items-center gap-1`}>
+            <RotateCcw size={13} />
+            <span>Reset</span>
+          </button>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={() => adjustCount(5)} className={addChip}>+5</button>
+          <button onClick={() => adjustCount(10)} className={addChip}>+10</button>
+          <button onClick={() => adjustCount(25)} className={addChip}>+25</button>
+        </div>
       </div>
 
       <Button

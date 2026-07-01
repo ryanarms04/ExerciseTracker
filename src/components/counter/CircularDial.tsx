@@ -44,27 +44,32 @@ export function CircularDial({
   const center = size / 2
   const circumference = TWO_PI * radius
 
-  const repsInSpin = count % REPS_PER_SPIN
-  const effectiveReps = repsInSpin + (active ? dragPartial : 0)
-  const progressFraction = Math.max(0, Math.min(effectiveReps / REPS_PER_SPIN, 0.9999))
+  const continuousProgress = count / REPS_PER_SPIN + (active ? dragPartial / REPS_PER_SPIN : 0)
 
-  const springProgress = useSpring(progressFraction, {
+  const springProgress = useSpring(continuousProgress, {
     stiffness: 300,
     damping: 30,
   })
 
   useEffect(() => {
-    springProgress.set(progressFraction)
-  }, [progressFraction, springProgress])
+    springProgress.set(continuousProgress)
+  }, [continuousProgress, springProgress])
 
-  const dashOffset = useTransform(springProgress, (v) => circumference * (1 - v))
+  const dashOffset = useTransform(springProgress, (v) => {
+    if (v <= 0) return circumference
+    const frac = v % 1
+    if (frac < 0.001) return 0
+    return circumference * (1 - frac)
+  })
 
   const thumbCx = useTransform(springProgress, (v) => {
-    const angle = -HALF_PI + v * TWO_PI
+    const frac = ((v % 1) + 1) % 1
+    const angle = -HALF_PI + frac * TWO_PI
     return center + radius * Math.cos(angle)
   })
   const thumbCy = useTransform(springProgress, (v) => {
-    const angle = -HALF_PI + v * TWO_PI
+    const frac = ((v % 1) + 1) % 1
+    const angle = -HALF_PI + frac * TWO_PI
     return center + radius * Math.sin(angle)
   })
 
