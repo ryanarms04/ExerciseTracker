@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react'
 import { motion } from 'motion/react'
-import { todayStr } from '../../lib/dateUtils'
+import { todayStr, toDateStr } from '../../lib/dateUtils'
 
 interface DateStripProps {
   selectedDate: string
@@ -13,7 +13,7 @@ function getDates(count: number): string[] {
   for (let i = count - 1; i >= 0; i--) {
     const d = new Date(today)
     d.setDate(today.getDate() - i)
-    dates.push(d.toISOString().split('T')[0])
+    dates.push(toDateStr(d))
   }
   return dates
 }
