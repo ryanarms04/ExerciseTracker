@@ -6,6 +6,7 @@ import { Plus } from 'lucide-react'
 import { db } from '../db/database'
 import { Card } from '../components/ui/Card'
 import { DynamicIcon } from '../components/ui/DynamicIcon'
+import { SegmentedControl } from '../components/ui/SegmentedControl'
 import { SwipeToDelete } from '../components/ui/SwipeToDelete'
 import { LogSessionSheet } from '../modals/LogSessionSheet'
 import { AddExerciseModal } from '../modals/AddExerciseModal'
@@ -53,21 +54,13 @@ export function WorkoutsScreen() {
           Workouts
         </h1>
 
-        <div className="flex gap-2 mt-4 overflow-x-auto scrollbar-hide pb-1">
-          {FILTERS.map((f) => (
-            <button
-              key={f.value}
-              onClick={() => setFilter(f.value)}
-              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
-                filter === f.value
-                  ? 'bg-teal-500 text-white shadow-sm'
-                  : 'bg-navy-100 dark:bg-navy-800 text-navy-600 dark:text-navy-400 hover:bg-navy-200 dark:hover:bg-navy-700'
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          options={FILTERS}
+          value={filter}
+          onChange={setFilter}
+          layout="scroll"
+          className="mt-4"
+        />
       </div>
 
       <div className="px-5">

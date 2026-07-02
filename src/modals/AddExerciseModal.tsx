@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { BottomSheet } from '../components/ui/BottomSheet'
 import { Button } from '../components/ui/Button'
 import { DynamicIcon } from '../components/ui/DynamicIcon'
+import { Input } from '../components/ui/Input'
+import { SectionLabel } from '../components/ui/SectionLabel'
+import { SegmentedControl } from '../components/ui/SegmentedControl'
 import { db } from '../db/database'
 import type { ExerciseCategory } from '../types'
 
@@ -54,44 +57,26 @@ export function AddExerciseModal({ open, onClose }: AddExerciseModalProps) {
       </h3>
 
       <div className="space-y-4">
+        <Input
+          label="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="e.g. Burpees"
+        />
+
         <div>
-          <label className="text-xs font-medium text-navy-500 dark:text-navy-400 uppercase tracking-wide">
-            Name
-          </label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Burpees"
-            className="w-full mt-1 px-3 py-2.5 rounded-xl bg-navy-50 dark:bg-navy-800 border border-navy-200 dark:border-navy-700 text-navy-900 dark:text-white text-sm outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-colors"
+          <SectionLabel>Category</SectionLabel>
+          <SegmentedControl
+            options={CATEGORIES}
+            value={category}
+            onChange={setCategory}
+            className="mt-1.5"
           />
         </div>
 
         <div>
-          <label className="text-xs font-medium text-navy-500 dark:text-navy-400 uppercase tracking-wide">
-            Category
-          </label>
-          <div className="flex gap-2 mt-1">
-            {CATEGORIES.map((c) => (
-              <button
-                key={c.value}
-                onClick={() => setCategory(c.value)}
-                className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all ${
-                  category === c.value
-                    ? 'bg-teal-500 text-white'
-                    : 'bg-navy-100 dark:bg-navy-800 text-navy-600 dark:text-navy-400'
-                }`}
-              >
-                {c.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <label className="text-xs font-medium text-navy-500 dark:text-navy-400 uppercase tracking-wide">
-            Icon
-          </label>
-          <div className="flex flex-wrap gap-2 mt-1">
+          <SectionLabel>Icon</SectionLabel>
+          <div className="flex flex-wrap gap-2 mt-1.5">
             {ICONS.map((ic) => (
               <button
                 key={ic}
@@ -110,10 +95,8 @@ export function AddExerciseModal({ open, onClose }: AddExerciseModalProps) {
         </div>
 
         <div>
-          <label className="text-xs font-medium text-navy-500 dark:text-navy-400 uppercase tracking-wide">
-            Color
-          </label>
-          <div className="flex gap-2 mt-1">
+          <SectionLabel>Color</SectionLabel>
+          <div className="flex gap-2 mt-1.5">
             {COLORS.map((c) => (
               <button
                 key={c}
