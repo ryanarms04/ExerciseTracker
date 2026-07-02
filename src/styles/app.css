@@ -69,41 +69,6 @@
 }
 
 @theme {
-  /* Legacy palette — do not use in new code (deleted in 4.5) */
-  --color-teal-50: #EFFCFB;
-  --color-teal-100: #D0F7F5;
-  --color-teal-200: #A3EFEB;
-  --color-teal-300: #6DE3DD;
-  --color-teal-400: #2ECFCC;
-  --color-teal-500: #0EA5A2;
-  --color-teal-600: #0D8F8C;
-  --color-teal-700: #0B7472;
-  --color-teal-800: #095B5A;
-  --color-teal-900: #074A49;
-
-  --color-coral-50: #FFF1F1;
-  --color-coral-100: #FFE0E0;
-  --color-coral-200: #FFC7C7;
-  --color-coral-300: #FFA3A3;
-  --color-coral-400: #FF8787;
-  --color-coral-500: #FF6B6B;
-  --color-coral-600: #E85555;
-  --color-coral-700: #C44040;
-  --color-coral-800: #A33535;
-  --color-coral-900: #872D2D;
-
-  --color-navy-50: #F8FAFC;
-  --color-navy-100: #F1F5F9;
-  --color-navy-200: #E2E8F0;
-  --color-navy-300: #CBD5E1;
-  --color-navy-400: #94A3B8;
-  --color-navy-500: #64748B;
-  --color-navy-600: #475569;
-  --color-navy-700: #334155;
-  --color-navy-800: #1E293B;
-  --color-navy-900: #111827;
-  --color-navy-950: #0B0F1A;
-
   --font-display: 'Space Grotesk', sans-serif;
   --font-body: 'Plus Jakarta Sans', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
@@ -114,9 +79,8 @@
   --radius-tile: 16px;
   --radius-sheet: 28px;
 
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  /* Floating elements only (snackbar, menus) — surfaces use hairlines */
   --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
-  --shadow-sheet: 0 -4px 24px rgba(0, 0, 0, 0.12);
 }
 
 /* ---------------------------------------------------------------------------
@@ -205,12 +169,8 @@ body {
   overflow-x: hidden;
   /* Installed PWA: no rubber-band scroll behind the app shell */
   overscroll-behavior-y: none;
-  background-color: var(--color-navy-50);
+  background-color: var(--app-bg);
   transition: background-color 0.2s ease;
-}
-
-.dark body {
-  background-color: var(--color-navy-950);
 }
 
 .font-display {

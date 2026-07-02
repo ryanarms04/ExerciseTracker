@@ -55,24 +55,22 @@ export function SwipeToDelete({
     return (
       <motion.div
         initial={{ height: 'auto' }}
-        className="rounded-[var(--radius-card)] overflow-hidden bg-coral-50 dark:bg-coral-900/20 border border-coral-200 dark:border-coral-800"
+        className="rounded-[var(--radius-card)] overflow-hidden bg-danger/10 border border-danger/40"
       >
-        <div className="p-4 flex items-center justify-between gap-3">
-          <p className="text-sm font-medium text-navy-800 dark:text-navy-200">
-            {confirmMessage}
-          </p>
+        <div className="p-3 flex items-center justify-between gap-3">
+          <p className="type-label text-text">{confirmMessage}</p>
           <div className="flex gap-2 shrink-0">
             <button
               onClick={handleCancel}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-navy-100 dark:bg-navy-800 text-navy-600 dark:text-navy-400"
+              className="min-h-11 px-3.5 rounded-full type-label bg-surface-2 border border-hairline text-text-mute"
             >
               Cancel
             </button>
             <button
               onClick={handleConfirm}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-coral-500 text-white"
+              className="min-h-11 px-3.5 rounded-full type-label bg-danger text-danger-ink"
             >
-              Remove
+              {label}
             </button>
           </div>
         </div>

@@ -204,8 +204,7 @@ export function CircularDial({
           fill="none"
           stroke="currentColor"
           strokeWidth={strokeWidth}
-          className="text-navy-200 dark:text-navy-700"
-          opacity={0.5}
+          className="text-ring-track"
         />
 
         {ticks.map((t, i) => (
@@ -217,7 +216,7 @@ export function CircularDial({
             y2={t.y2}
             stroke="currentColor"
             strokeWidth={1.5}
-            className="text-navy-300 dark:text-navy-600"
+            className="text-ring-track"
             strokeLinecap="round"
           />
         ))}

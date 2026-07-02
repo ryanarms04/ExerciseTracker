@@ -5,12 +5,13 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 export function Card({ variant = 'elevated', className = '', children, ...props }: CardProps) {
-  const base = 'rounded-[var(--radius-card)] transition-shadow duration-200'
+  const base = 'rounded-[var(--radius-card)]'
 
+  // Depth via hairlines and surface steps — no drop shadows (REDESIGN §2)
   const variants = {
-    elevated: 'bg-white dark:bg-navy-900 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)]',
-    flat: 'bg-navy-50 dark:bg-navy-900',
-    outlined: 'border border-navy-200 dark:border-navy-700 bg-white dark:bg-navy-900',
+    elevated: 'bg-surface border border-hairline',
+    flat: 'bg-surface-2',
+    outlined: 'bg-surface border border-hairline',
   }
 
   return (
