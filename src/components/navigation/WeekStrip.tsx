@@ -32,11 +32,17 @@ export function WeekStrip({ selectedDate, onSelect }: WeekStripProps) {
   const atCurrentWeek = weekAnchor === currentMonday
 
   const activeDates = useLiveQuery(async () => {
-    const dates = await db.sessions
-      .where('date')
-      .between(days[0], days[6], true, true)
-      .uniqueKeys()
-    return new Set(dates as string[])
+    const range = db.sessions.where('date').between(days[0], days[6], true, true)
+    try {
+      const dates = await range.uniqueKeys()
+      return new Set(dates as string[])
+    } catch (err) {
+      // Some WebKit builds are flaky with unique-key cursors; a rejected
+      // query would otherwise throw all the way to the error boundary.
+      console.error('uniqueKeys failed, falling back to full scan', err)
+      const rows = await range.toArray()
+      return new Set(rows.map((s) => s.date))
+    }
   }, [weekAnchor])
 
   function page(delta: 1 | -1) {

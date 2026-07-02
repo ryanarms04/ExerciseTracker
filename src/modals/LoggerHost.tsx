@@ -26,11 +26,16 @@ export function LoggerHost() {
     return all.find((e) => !e.isArchived)
   }, [exerciseId])
 
+  // useLiveQuery keeps returning the PREVIOUS pick for a render while the new
+  // lookup is in flight — opening then would arm the sheet one exercise behind.
+  // Hold the sheet closed until the result matches the request.
+  const armed = exercise && (exerciseId == null || exercise.id === exerciseId) ? exercise : null
+
   return (
     <LogSessionSheet
-      open={open && !!exercise}
+      open={open && !!armed}
       onClose={closeLogger}
-      initialExercise={exercise ?? null}
+      initialExercise={armed}
       initialDate={selectedDate}
       editSession={editSession}
     />

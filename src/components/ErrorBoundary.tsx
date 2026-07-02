@@ -24,6 +24,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.error) {
+      const err = this.state.error
       return (
         <div className="min-h-dvh bg-bg flex items-center justify-center px-5">
           <Card className="p-6 max-w-sm w-full text-center space-y-4">
@@ -31,6 +32,11 @@ export class ErrorBoundary extends Component<Props, State> {
             <p className="type-body text-text-mute">
               Your data is safe — it lives on this device, not in the app. Try
               again, or reload if this keeps happening.
+            </p>
+            {/* The exact failure, so a phone screenshot is a full bug report */}
+            <p className="font-mono text-[11px] leading-4 text-text-faint break-words text-left max-h-24 overflow-y-auto p-2 rounded-lg bg-surface-2 border border-hairline">
+              {err.name}: {err.message}
+              {err.stack ? `\n${err.stack.split('\n').slice(1, 3).join('\n')}` : ''}
             </p>
             <div className="flex gap-3 justify-center">
               <Button variant="secondary" onClick={() => this.setState({ error: null })}>
