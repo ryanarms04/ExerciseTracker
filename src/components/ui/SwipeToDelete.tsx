@@ -8,12 +8,19 @@ interface SwipeToDeleteProps {
   label?: string
   /** false = fire onDelete on release (undo-based flows); true = inline confirm. */
   confirm?: boolean
+  confirmMessage?: string
 }
 
 const THRESHOLD = -80
 const DELETE_THRESHOLD = -140
 
-export function SwipeToDelete({ children, onDelete, label = 'Remove', confirm = true }: SwipeToDeleteProps) {
+export function SwipeToDelete({
+  children,
+  onDelete,
+  label = 'Remove',
+  confirm = true,
+  confirmMessage = 'Remove this exercise?',
+}: SwipeToDeleteProps) {
   const x = useMotionValue(0)
   const [confirming, setConfirming] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -52,7 +59,7 @@ export function SwipeToDelete({ children, onDelete, label = 'Remove', confirm = 
       >
         <div className="p-4 flex items-center justify-between gap-3">
           <p className="text-sm font-medium text-navy-800 dark:text-navy-200">
-            Remove this exercise?
+            {confirmMessage}
           </p>
           <div className="flex gap-2 shrink-0">
             <button
