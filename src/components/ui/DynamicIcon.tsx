@@ -1,16 +1,11 @@
-import { icons, type LucideProps } from 'lucide-react'
+import type { LucideProps } from 'lucide-react'
+import { ICON_MAP } from './icons'
 
 interface DynamicIconProps extends LucideProps {
   name: string
 }
 
 export function DynamicIcon({ name, ...props }: DynamicIconProps) {
-  const pascalName = name
-    .split('-')
-    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
-    .join('') as keyof typeof icons
-
-  const Icon = icons[pascalName]
-  if (!Icon) return null
+  const Icon = ICON_MAP[name] ?? ICON_MAP.activity
   return <Icon {...props} />
 }

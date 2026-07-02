@@ -2,7 +2,6 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { motion } from 'motion/react'
 import { Link } from 'react-router-dom'
 import { Settings, Lock } from 'lucide-react'
-import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from 'recharts'
 import { db } from '../db/database'
 import { Card } from '../components/ui/Card'
 import { DynamicIcon } from '../components/ui/DynamicIcon'
@@ -13,6 +12,7 @@ import { getWeekDates, getDayOfWeekShort } from '../lib/dateUtils'
 
 export function ProfileScreen() {
   const userName = useSettingsStore((s) => s.userName)
+  const dailyGoal = useSettingsStore((s) => s.dailyGoal)
   const { unlocked, stats } = useAchievements()
 
   const weekData = useLiveQuery(async () => {
@@ -121,34 +121,40 @@ export function ProfileScreen() {
         <h2 className="font-display text-sm font-bold text-navy-900 dark:text-white mb-3 uppercase tracking-wide">
           This Week
         </h2>
-        {weekData && (
-          <ResponsiveContainer width="100%" height={140}>
-            <BarChart data={weekData}>
-              <XAxis
-                dataKey="day"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 11, fill: '#94A3B8' }}
-              />
-              <Tooltip
-                cursor={{ fill: 'rgba(14, 165, 162, 0.08)' }}
-                contentStyle={{
-                  backgroundColor: '#111827',
-                  border: 'none',
-                  borderRadius: 12,
-                  fontSize: 12,
-                  color: '#fff',
-                }}
-              />
-              <Bar
-                dataKey="reps"
-                fill="#0EA5A2"
-                radius={[6, 6, 0, 0]}
-                maxBarSize={32}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        )}
+        {weekData && (() => {
+          // Bars scale to 72px so the tallest bar + its 20px value label fill
+          // the 96px area; the goal hairline shares the same px scale.
+          const max = Math.max(dailyGoal, ...weekData.map((d) => d.reps), 1)
+          return (
+            <>
+              <div className="relative h-24">
+                <div
+                  aria-hidden
+                  className="absolute inset-x-0 border-t border-dashed border-ring-track"
+                  style={{ bottom: (dailyGoal / max) * 72 }}
+                />
+                <div className="absolute inset-0 flex items-end gap-2">
+                  {weekData.map((d) => (
+                    <div key={d.day} className="flex-1 flex flex-col items-center justify-end gap-1 min-w-0">
+                      {d.reps > 0 && <span className="num-sm text-text-mute">{d.reps}</span>}
+                      <div
+                        className={`w-full max-w-9 rounded-t ${d.reps > 0 ? 'bg-accent' : 'bg-ring-track'}`}
+                        style={{ height: d.reps > 0 ? Math.max((d.reps / max) * 72, 4) : 3 }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2 mt-1.5">
+                {weekData.map((d) => (
+                  <span key={d.day} className="flex-1 text-center type-caption text-text-faint">
+                    {d.day}
+                  </span>
+                ))}
+              </div>
+            </>
+          )
+        })()}
       </Card>
     </div>
   )
