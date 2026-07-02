@@ -2,7 +2,7 @@ import { db } from './database'
 import type { Exercise } from '../types'
 
 /** Bump when seeds or one-shot healings change; each version runs once per device. */
-const SEED_VERSION = 1
+const SEED_VERSION = 2
 const SEED_VERSION_KEY = 'exercise-tracker-seed-version'
 
 const DEFAULT_EXERCISES: Omit<Exercise, 'id'>[] = [
@@ -13,7 +13,7 @@ const DEFAULT_EXERCISES: Omit<Exercise, 'id'>[] = [
   { name: 'Sit-ups', category: 'core', icon: 'flip-vertical-2', color: '#FF6B6B', isCustom: false, isArchived: false, createdAt: new Date().toISOString() },
   { name: 'Crunches', category: 'core', icon: 'minimize-2', color: '#FF8787', isCustom: false, isArchived: false, createdAt: new Date().toISOString() },
   { name: 'Leg Raises', category: 'core', icon: 'arrow-up-from-line', color: '#E85555', isCustom: false, isArchived: false, createdAt: new Date().toISOString() },
-  { name: 'Plank (seconds)', category: 'core', icon: 'timer', color: '#C44040', isCustom: false, isArchived: false, createdAt: new Date().toISOString() },
+  { name: 'Plank', category: 'core', icon: 'timer', color: '#C44040', isCustom: false, isArchived: false, createdAt: new Date().toISOString(), unit: 'seconds' },
   { name: 'Squats', category: 'lower', icon: 'arrow-down', color: '#64748B', isCustom: false, isArchived: false, createdAt: new Date().toISOString() },
   { name: 'Lunges', category: 'lower', icon: 'footprints', color: '#475569', isCustom: false, isArchived: false, createdAt: new Date().toISOString() },
   { name: 'Calf Raises', category: 'lower', icon: 'trending-up', color: '#334155', isCustom: false, isArchived: false, createdAt: new Date().toISOString() },
@@ -36,6 +36,17 @@ async function runSeed() {
   if (Number(localStorage.getItem(SEED_VERSION_KEY) ?? 0) >= SEED_VERSION) return
 
   await db.transaction('rw', db.exercises, async () => {
+    // v2: "Plank (seconds)" becomes a real duration exercise. Runs BEFORE the
+    // missing-seed check so the renamed row still counts as the Plank seed.
+    const oldPlank = await db.exercises.where('name').equals('Plank (seconds)').first()
+    if (oldPlank?.id) {
+      await db.exercises.update(oldPlank.id, { name: 'Plank', unit: 'seconds' })
+    }
+    const plank = await db.exercises.where('name').equals('Plank').first()
+    if (plank?.id && plank.unit !== 'seconds') {
+      await db.exercises.update(plank.id, { unit: 'seconds' })
+    }
+
     const existing = await db.exercises.toArray()
     const existingNames = new Set(existing.map((e) => e.name))
 

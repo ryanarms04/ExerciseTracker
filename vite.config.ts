@@ -30,6 +30,15 @@ export default defineConfig({
           { src: 'icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
           { src: 'icons/icon-maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
+        shortcuts: [
+          {
+            name: 'Log a set',
+            short_name: 'Log',
+            description: 'Open the logger with your last-used exercise',
+            url: '/ExerciseTracker/?log=1',
+            icons: [{ src: 'icons/icon-192x192.png', sizes: '192x192', type: 'image/png' }],
+          },
+        ],
       },
       workbox: {
         // Fonts are self-hosted (@fontsource) and land in the precache via woff2

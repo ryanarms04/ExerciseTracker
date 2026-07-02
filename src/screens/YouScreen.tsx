@@ -1,5 +1,7 @@
+import { useEffect, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Link } from 'react-router-dom'
+import { motion, useAnimation } from 'motion/react'
 import { Flame, ChevronRight, Download, Upload, Minus, Plus } from 'lucide-react'
 import { db } from '../db/database'
 import { Button } from '../components/ui/Button'
@@ -19,6 +21,14 @@ const THEME_OPTIONS: { label: string; value: SettingsState['theme']; icon: typeo
   { label: 'Dark', value: 'dark', icon: Moon },
   { label: 'System', value: 'system', icon: Monitor },
 ]
+
+/** iOS Safari tab (not yet installed): nudge toward Add to Home Screen. */
+function isInstallableIOS() {
+  return (
+    /iPhone|iPad|iPod/.test(navigator.userAgent) &&
+    !window.matchMedia('(display-mode: standalone)').matches
+  )
+}
 
 export function YouScreen() {
   const { userName, dailyGoal, theme, setUserName, setDailyGoal, setTheme } = useSettingsStore()
@@ -252,6 +262,11 @@ export function YouScreen() {
             </div>
           </div>
 
+          {isInstallableIOS() && (
+            <p className="p-4 type-caption text-text-faint text-center">
+              Install for offline + full screen: Share&nbsp;→ Add to Home Screen
+            </p>
+          )}
           <p className="p-4 type-caption text-text-faint text-center">
             Momentum · v{__APP_VERSION__}
           </p>
@@ -278,9 +293,22 @@ function AchievementBadge({
   const r = (size - stroke) / 2
   const c = 2 * Math.PI * r
 
+  // Springs in when it unlocks while you're watching
+  const controls = useAnimation()
+  const prevUnlocked = useRef(isUnlocked)
+  useEffect(() => {
+    if (!prevUnlocked.current && isUnlocked) {
+      controls.start({
+        scale: [0.8, 1.12, 1],
+        transition: { type: 'spring', stiffness: 300, damping: 18 },
+      })
+    }
+    prevUnlocked.current = isUnlocked
+  }, [isUnlocked, controls])
+
   return (
     <div className="flex flex-col items-center text-center gap-1 p-3 bg-surface border border-hairline rounded-[var(--radius-tile)]">
-      <div className="relative" style={{ width: size, height: size }}>
+      <motion.div animate={controls} className="relative" style={{ width: size, height: size }}>
         <svg width={size} height={size} className="-rotate-90">
           <circle
             cx={size / 2}
@@ -311,7 +339,7 @@ function AchievementBadge({
             className={isUnlocked ? 'text-accent' : 'text-text-faint'}
           />
         </div>
-      </div>
+      </motion.div>
       <p className="type-label text-text">{def.name}</p>
       <p className="type-caption text-text-faint">
         {!isUnlocked && prog.target > 1

@@ -5,6 +5,8 @@ interface RingGaugeProps {
   goal: number
   size?: number
   strokeWidth?: number
+  /** One-shot ember sweep for the goal-crossed moment. */
+  celebrate?: boolean
 }
 
 // ease-out-quart — fast start, gentle landing (REDESIGN §7 mount fill)
@@ -14,7 +16,7 @@ const EASE_OUT_QUART = [0.25, 1, 0.5, 1] as const
  * The goal ring. Fills over 800ms; past 100% a second ember arc sweeps on
  * top of the closed accent ring. The number lives in the center.
  */
-export function RingGauge({ value, goal, size = 128, strokeWidth = 10 }: RingGaugeProps) {
+export function RingGauge({ value, goal, size = 128, strokeWidth = 10, celebrate }: RingGaugeProps) {
   const r = (size - strokeWidth) / 2
   const c = 2 * Math.PI * r
   const progress = goal > 0 ? value / goal : 0
@@ -58,6 +60,24 @@ export function RingGauge({ value, goal, size = 128, strokeWidth = 10 }: RingGau
             initial={{ strokeDashoffset: c }}
             animate={{ strokeDashoffset: c * (1 - over) }}
             transition={{ duration: 0.8, ease: EASE_OUT_QUART }}
+          />
+        )}
+        {celebrate && (
+          <motion.circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            className="stroke-ember"
+            strokeDasharray={c}
+            initial={{ strokeDashoffset: c, opacity: 1 }}
+            animate={{ strokeDashoffset: 0, opacity: [1, 1, 0] }}
+            transition={{
+              strokeDashoffset: { duration: 0.6, ease: EASE_OUT_QUART },
+              opacity: { duration: 1.3, times: [0, 0.55, 1] },
+            }}
           />
         )}
       </svg>

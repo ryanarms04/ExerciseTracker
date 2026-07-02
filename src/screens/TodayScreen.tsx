@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion, AnimatePresence } from 'motion/react'
 import { Link } from 'react-router-dom'
@@ -28,6 +28,7 @@ export function TodayScreen() {
   const snackbar = useSnackbar()
   const haptic = useHaptic()
   const lastKnownToday = useRef(todayStr())
+  const [celebrating, setCelebrating] = useState(false)
   const isToday = selectedDate === todayStr()
 
   // A resumed PWA keeps state across midnight — follow the day forward,
@@ -82,6 +83,20 @@ export function TodayScreen() {
   const dayTotal = dayRows?.reduce((sum, r) => sum + r.session.reps, 0) ?? 0
   const goalMet = dayTotal >= dailyGoal
 
+  // Goal crossed → ember sweep + success haptic, once per day
+  useEffect(() => {
+    if (!isToday || dayRows === undefined || !goalMet) return
+    const today = todayStr()
+    const { lastGoalCelebration, setLastGoalCelebration } = useSettingsStore.getState()
+    if (lastGoalCelebration === today) return
+    setLastGoalCelebration(today)
+    haptic.success()
+    setCelebrating(true)
+    const t = setTimeout(() => setCelebrating(false), 1500)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [goalMet, isToday, dayRows === undefined])
+
   const repsByExercise = new Map<number, number>()
   for (const { session } of dayRows ?? []) {
     repsByExercise.set(session.exerciseId, (repsByExercise.get(session.exerciseId) ?? 0) + session.reps)
@@ -130,7 +145,13 @@ export function TodayScreen() {
         className="w-full text-left active:scale-[0.99] transition-transform"
       >
         <div className="flex items-center gap-5 p-4 bg-surface border border-hairline rounded-[var(--radius-card)]">
-          <RingGauge key={selectedDate} value={dayTotal} goal={dailyGoal} size={120} />
+          <RingGauge
+            key={selectedDate}
+            value={dayTotal}
+            goal={dailyGoal}
+            size={120}
+            celebrate={celebrating}
+          />
           <div className="flex-1 min-w-0">
             <p className="type-body text-text-mute inline-flex items-center gap-1.5">
               of {dailyGoal}

@@ -9,6 +9,8 @@ export interface Exercise {
   isCustom: boolean
   isArchived: boolean
   createdAt: string
+  /** How sets are counted. Absent = 'reps' (non-indexed, no schema bump). */
+  unit?: 'reps' | 'seconds'
 }
 
 export interface Session {
@@ -32,6 +34,8 @@ export interface SettingsState {
   theme: 'light' | 'dark' | 'system'
   hasCompletedOnboarding: boolean
   selectedExerciseIds: number[]
+  /** Date (YYYY-MM-DD) the goal-crossed celebration last ran — once per day. */
+  lastGoalCelebration: string
 }
 
 export interface AchievementDef {

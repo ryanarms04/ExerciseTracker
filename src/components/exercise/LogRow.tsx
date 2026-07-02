@@ -44,7 +44,10 @@ export function LogRow({ session, exercise, onClick }: LogRowProps) {
           )}
         </p>
       </div>
-      <span className="num-md text-text">+{session.reps}</span>
+      <span className="num-md text-text">
+        +{session.reps}
+        {exercise?.unit === 'seconds' && <span className="num-sm text-text-faint">s</span>}
+      </span>
     </Tag>
   )
 }

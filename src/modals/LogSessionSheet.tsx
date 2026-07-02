@@ -7,6 +7,7 @@ import { DateChip } from '../components/ui/DateChip'
 import { ExerciseCarousel } from '../components/exercise/ExerciseCarousel'
 import { WeekStrip } from '../components/navigation/WeekStrip'
 import { CircularDial } from '../components/counter/CircularDial'
+import { HoldTimer } from '../components/counter/HoldTimer'
 import { useSnackbar } from '../components/ui/Snackbar'
 import { db } from '../db/database'
 import { useHaptic } from '../hooks/useHaptic'
@@ -71,6 +72,8 @@ export function LogSessionSheet({
   })()
 
   const selected = carouselList.find((e) => e.id === selectedId) ?? carouselList[0]
+  const isDuration = selected?.unit === 'seconds'
+  const unitWord = isDuration ? 'seconds' : 'reps'
 
   const increment = useCallback(() => {
     setCount((c) => c + 1)
@@ -104,7 +107,7 @@ export function LogSessionSheet({
     if (ex.id === selectedId) return
     if (count > 0) {
       const ok = window.confirm(
-        `Discard ${count} uncounted reps and switch to ${ex.name}?`,
+        `Discard ${count} uncounted ${unitWord} and switch to ${ex.name}?`,
       )
       if (!ok) return
       setCount(0)
@@ -118,7 +121,7 @@ export function LogSessionSheet({
     if (dirty) {
       const msg = editSession
         ? 'Discard changes to this set?'
-        : `Discard ${count} uncounted reps?`
+        : `Discard ${count} uncounted ${unitWord}?`
       if (!window.confirm(msg)) return
     }
     onClose()
@@ -218,45 +221,63 @@ export function LogSessionSheet({
           <div
             role="slider"
             tabIndex={0}
-            aria-label={`Rep dial for ${selected.name}`}
+            aria-label={`${isDuration ? 'Timer' : 'Rep dial'} for ${selected.name}`}
             aria-valuemin={0}
             aria-valuemax={999}
             aria-valuenow={count}
-            aria-valuetext={`${count} reps`}
+            aria-valuetext={`${count} ${unitWord}`}
             onKeyDown={handleDialKeys}
             className="relative flex items-center justify-center rounded-full outline-offset-8"
             style={{ width: DIAL_SIZE, height: DIAL_SIZE }}
           >
-            <CircularDial
-              size={DIAL_SIZE}
-              strokeWidth={8}
-              count={count}
-              onIncrement={increment}
-              onDecrement={decrement}
-              color={selected.color}
-            />
+            {isDuration ? (
+              <HoldTimer
+                size={DIAL_SIZE}
+                count={count}
+                onTick={increment}
+                color={selected.color}
+              />
+            ) : (
+              <CircularDial
+                size={DIAL_SIZE}
+                strokeWidth={8}
+                count={count}
+                onIncrement={increment}
+                onDecrement={decrement}
+                color={selected.color}
+              />
+            )}
             <motion.div
               animate={rippleControls}
               className="absolute w-24 h-24 rounded-full border-2 border-accent-bright pointer-events-none"
               style={{ opacity: 0 }}
             />
-            {/* The whole inner circle is the +1 target — bigger than any button */}
-            <button
-              onClick={increment}
-              aria-label="Add one rep"
-              className="absolute w-48 h-48 rounded-full flex items-center justify-center z-10"
-            >
-              <motion.span animate={controls} className="num-hero text-text">
-                {count}
-              </motion.span>
-            </button>
+            {isDuration ? (
+              <div className="absolute flex items-baseline gap-0.5 pointer-events-none">
+                <motion.span animate={controls} className="num-hero text-text">
+                  {count}
+                </motion.span>
+                <span className="num-sm text-text-faint">s</span>
+              </div>
+            ) : (
+              /* The whole inner circle is the +1 target — bigger than any button */
+              <button
+                onClick={increment}
+                aria-label="Add one rep"
+                className="absolute w-48 h-48 rounded-full flex items-center justify-center z-10"
+              >
+                <motion.span animate={controls} className="num-hero text-text">
+                  {count}
+                </motion.span>
+              </button>
+            )}
             <span className="sr-only" role="status" aria-live="polite">
-              {count} reps
+              {count} {unitWord}
             </span>
           </div>
 
           <p className="type-caption text-text-faint -mt-2">
-            Spin the ring · tap the middle for +1
+            {isDuration ? 'Hold the circle to run the timer' : 'Spin the ring · tap the middle for +1'}
           </p>
 
           <div className="flex items-center justify-center gap-1.5 flex-wrap">
@@ -295,9 +316,9 @@ export function LogSessionSheet({
             className="w-full min-h-14 rounded-2xl bg-accent text-accent-ink type-heading disabled:opacity-40 transition-opacity"
           >
             {editSession
-              ? `Update to ${count}`
+              ? `Update to ${count}${isDuration ? 's' : ''}`
               : count > 0
-                ? `Bank ${count} ${selected.name.toLowerCase()}`
+                ? `Bank ${count}${isDuration ? 's' : ''} ${selected.name.toLowerCase()}`
                 : `Bank ${selected.name.toLowerCase()}`}
           </motion.button>
         </div>

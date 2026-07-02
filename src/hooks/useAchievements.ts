@@ -1,8 +1,6 @@
-import { useEffect } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/database'
 import { useSettingsStore } from '../stores/settingsStore'
-import { ACHIEVEMENTS } from '../lib/achievements'
 import { todayStr } from '../lib/dateUtils'
 import { computeStreak } from '../lib/streak'
 import type { AchievementStats } from '../types'
@@ -67,26 +65,7 @@ export function useAchievements() {
     }
   }, [dailyGoal])
 
-  useEffect(() => {
-    if (!stats || !unlocked) return
-
-    const unlockedKeys = new Set(unlocked.map((a) => a.key))
-
-    for (const achievement of ACHIEVEMENTS) {
-      if (!unlockedKeys.has(achievement.key) && achievement.rule(stats)) {
-        db.achievements
-          .add({
-            key: achievement.key,
-            unlockedAt: new Date().toISOString(),
-          })
-          .catch((err) => {
-            // &key unique index rejects concurrent double-unlocks (StrictMode,
-            // multiple tabs) — that rejection is the desired outcome.
-            if (err?.name !== 'ConstraintError') console.error(err)
-          })
-      }
-    }
-  }, [stats, unlocked])
-
+  // Pure data hook — unlock detection lives in AchievementWatcher (Layout),
+  // so it runs no matter which screen is open.
   return { unlocked: unlocked ?? [], stats }
 }
