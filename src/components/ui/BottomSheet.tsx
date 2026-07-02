@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useRef } from 'react'
+import { type ReactNode, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 
 interface BottomSheetProps {
@@ -8,8 +8,6 @@ interface BottomSheetProps {
 }
 
 export function BottomSheet({ open, onClose, children }: BottomSheetProps) {
-  const sheetRef = useRef<HTMLDivElement>(null)
-
   useEffect(() => {
     if (!open) return
     function handleKey(e: KeyboardEvent) {
@@ -31,7 +29,6 @@ export function BottomSheet({ open, onClose, children }: BottomSheetProps) {
             onClick={onClose}
           />
           <motion.div
-            ref={sheetRef}
             className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-navy-900 rounded-t-3xl shadow-[var(--shadow-sheet)] safe-bottom"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}

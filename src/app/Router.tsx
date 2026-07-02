@@ -1,4 +1,5 @@
 import { HashRouter, Routes, Route } from 'react-router-dom'
+import { ErrorBoundary } from '../components/ErrorBoundary'
 import { Layout } from './Layout'
 import { HomeScreen } from '../screens/HomeScreen'
 import { WorkoutsScreen } from '../screens/WorkoutsScreen'
@@ -9,7 +10,8 @@ import { SettingsScreen } from '../screens/SettingsScreen'
 export function Router() {
   return (
     <HashRouter>
-      <Routes>
+      <ErrorBoundary>
+        <Routes>
         <Route element={<Layout />}>
           <Route index element={<HomeScreen />} />
           <Route path="workouts" element={<WorkoutsScreen />} />
@@ -17,7 +19,8 @@ export function Router() {
           <Route path="exercise/:id" element={<ExerciseDetailScreen />} />
           <Route path="settings" element={<SettingsScreen />} />
         </Route>
-      </Routes>
+        </Routes>
+      </ErrorBoundary>
     </HashRouter>
   )
 }

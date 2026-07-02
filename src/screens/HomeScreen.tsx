@@ -154,7 +154,7 @@ export function HomeScreen() {
           <h2 className="font-display text-sm font-bold text-navy-900 dark:text-white mb-3 uppercase tracking-wide px-1">
             {isToday ? 'Recent Activity' : `Activity — ${formatDate(selectedDate)}`}
           </h2>
-          {(!recentSessions || recentSessions.length === 0) ? (
+          {recentSessions === undefined ? null : recentSessions.length === 0 ? (
             <Card className="p-6 text-center">
               <p className="text-navy-400 dark:text-navy-500 text-sm">
                 No workouts yet. Tap an exercise above to start!
