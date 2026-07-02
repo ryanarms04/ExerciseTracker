@@ -50,6 +50,16 @@ export function getDayOfWeekShort(dateStr: string): string {
   return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' })
 }
 
+/** Coarse age for the logger context strip: "3h ago", "yesterday", "5d ago". */
+export function relativeAge(iso: string): string {
+  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60_000)
+  if (mins < 60) return `${Math.max(mins, 1)}m ago`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return days === 1 ? 'yesterday' : `${days}d ago`
+}
+
 /** "7:12 pm" — the session's own wall-clock time. */
 export function formatTime(iso: string): string {
   return new Date(iso)

@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion } from 'motion/react'
@@ -6,14 +5,14 @@ import { ArrowLeft, Trash2 } from 'lucide-react'
 import { db } from '../db/database'
 import { Card } from '../components/ui/Card'
 import { DynamicIcon } from '../components/ui/DynamicIcon'
-import { LogSessionSheet } from '../modals/LogSessionSheet'
 import { Button } from '../components/ui/Button'
+import { useLoggerStore } from '../stores/loggerStore'
 import { formatDate } from '../lib/dateUtils'
 
 export function ExerciseDetailScreen() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [showLog, setShowLog] = useState(false)
+  const openLogger = useLoggerStore((s) => s.openLogger)
 
   const exercise = useLiveQuery(
     () => db.exercises.get(Number(id)),
@@ -83,7 +82,7 @@ export function ExerciseDetailScreen() {
           ))}
         </div>
 
-        <Button onClick={() => setShowLog(true)} fullWidth>
+        <Button onClick={() => openLogger(exercise.id)} fullWidth>
           Log Reps
         </Button>
 
@@ -126,12 +125,6 @@ export function ExerciseDetailScreen() {
           )}
         </div>
       </div>
-
-      <LogSessionSheet
-        exercise={exercise}
-        open={showLog}
-        onClose={() => setShowLog(false)}
-      />
     </>
   )
 }

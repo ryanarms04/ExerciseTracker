@@ -5,12 +5,12 @@ import { useLoggerStore } from '../stores/loggerStore'
 import { useDayStore } from '../stores/dayStore'
 
 /**
- * Renders the one logger opened via useLoggerStore (FAB, ring card, tiles).
- * No explicit exercise → arms the last-used one; the viewed day flows in as
- * the logging date. (Phase 3 replaces the armed pick with an in-logger carousel.)
+ * Renders the one logger opened via useLoggerStore (FAB, ring card, tiles,
+ * library, detail, row edits). No explicit exercise → arms the last-used one;
+ * the viewed day flows in as the logging date.
  */
 export function LoggerHost() {
-  const { open, exerciseId, closeLogger } = useLoggerStore()
+  const { open, exerciseId, editSession, closeLogger } = useLoggerStore()
   const selectedDate = useDayStore((s) => s.selectedDate)
 
   const exercise = useLiveQuery(async () => {
@@ -28,10 +28,11 @@ export function LoggerHost() {
 
   return (
     <LogSessionSheet
-      exercise={exercise ?? null}
       open={open && !!exercise}
       onClose={closeLogger}
+      initialExercise={exercise ?? null}
       initialDate={selectedDate}
+      editSession={editSession}
     />
   )
 }

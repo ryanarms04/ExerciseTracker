@@ -1,6 +1,6 @@
 import { type ReactNode, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { ArrowLeft } from 'lucide-react'
+import { X } from 'lucide-react'
 
 interface SheetProps {
   open: boolean
@@ -42,7 +42,7 @@ export function Sheet({ open, onClose, title, headerRight, children }: SheetProp
               aria-label="Close"
               className="w-11 h-11 flex items-center justify-center rounded-full text-text-mute hover:bg-surface-2 transition-colors -ml-2"
             >
-              <ArrowLeft size={20} />
+              <X size={20} />
             </button>
             {title && <h2 className="type-heading text-text">{title}</h2>}
             {headerRight && <div className="ml-auto">{headerRight}</div>}

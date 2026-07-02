@@ -24,6 +24,7 @@ export function TodayScreen() {
   const userName = useSettingsStore((s) => s.userName)
   const dailyGoal = useSettingsStore((s) => s.dailyGoal)
   const openLogger = useLoggerStore((s) => s.openLogger)
+  const openEditor = useLoggerStore((s) => s.openEditor)
   const snackbar = useSnackbar()
   const haptic = useHaptic()
   const lastKnownToday = useRef(todayStr())
@@ -206,7 +207,11 @@ export function TodayScreen() {
                     label="Delete"
                     onDelete={() => deleteSession(session, exercise)}
                   >
-                    <LogRow session={session} exercise={exercise} />
+                    <LogRow
+                      session={session}
+                      exercise={exercise}
+                      onClick={() => openEditor(session)}
+                    />
                   </SwipeToDelete>
                 </motion.div>
               ))}

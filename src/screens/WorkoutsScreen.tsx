@@ -8,10 +8,10 @@ import { Card } from '../components/ui/Card'
 import { DynamicIcon } from '../components/ui/DynamicIcon'
 import { SegmentedControl } from '../components/ui/SegmentedControl'
 import { SwipeToDelete } from '../components/ui/SwipeToDelete'
-import { LogSessionSheet } from '../modals/LogSessionSheet'
 import { AddExerciseModal } from '../modals/AddExerciseModal'
+import { useLoggerStore } from '../stores/loggerStore'
 import { todayStr } from '../lib/dateUtils'
-import type { Exercise, ExerciseCategory } from '../types'
+import type { ExerciseCategory } from '../types'
 
 const FILTERS: { label: string; value: ExerciseCategory | 'all' }[] = [
   { label: 'All', value: 'all' },
@@ -23,8 +23,8 @@ const FILTERS: { label: string; value: ExerciseCategory | 'all' }[] = [
 
 export function WorkoutsScreen() {
   const [filter, setFilter] = useState<ExerciseCategory | 'all'>('all')
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
+  const openLogger = useLoggerStore((s) => s.openLogger)
 
   const exercises = useLiveQuery(async () => {
     const all = await db.exercises.toArray()
@@ -85,7 +85,7 @@ export function WorkoutsScreen() {
                       className={`p-4 cursor-pointer group active:scale-[0.98] transition-transform ${
                         isHero ? 'flex items-center gap-4' : ''
                       }`}
-                      onClick={() => setSelectedExercise(ex)}
+                      onClick={() => openLogger(ex.id)}
                     >
                       <div
                         className={`rounded-2xl flex items-center justify-center shrink-0 transition-shadow group-hover:shadow-lg ${
@@ -146,12 +146,6 @@ export function WorkoutsScreen() {
           </motion.div>
         </div>
       </div>
-
-      <LogSessionSheet
-        exercise={selectedExercise}
-        open={!!selectedExercise}
-        onClose={() => setSelectedExercise(null)}
-      />
 
       <AddExerciseModal
         open={showAddModal}

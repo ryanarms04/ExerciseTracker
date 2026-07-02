@@ -5,6 +5,8 @@ import type { Exercise, Session } from '../../types'
 interface LogRowProps {
   session: Session
   exercise?: Exercise
+  /** Tap-to-edit: opens the logger with this session loaded. */
+  onClick?: () => void
 }
 
 /**
@@ -12,11 +14,15 @@ interface LogRowProps {
  * a different day than they were created get an honest `added later` badge
  * instead of a misleading time.
  */
-export function LogRow({ session, exercise }: LogRowProps) {
+export function LogRow({ session, exercise, onClick }: LogRowProps) {
   const backdated = toDateStr(new Date(session.createdAt)) !== session.date
+  const Tag = onClick ? 'button' : 'div'
 
   return (
-    <div className="flex items-center gap-3 p-3 bg-surface border border-hairline rounded-[var(--radius-card)]">
+    <Tag
+      onClick={onClick}
+      className="w-full text-left flex items-center gap-3 p-3 bg-surface border border-hairline rounded-[var(--radius-card)]"
+    >
       <div
         className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
         style={{
@@ -39,6 +45,6 @@ export function LogRow({ session, exercise }: LogRowProps) {
         </p>
       </div>
       <span className="num-md text-text">+{session.reps}</span>
-    </div>
+    </Tag>
   )
 }
