@@ -1,130 +1,199 @@
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { motion } from 'motion/react'
-import { ArrowLeft, Trash2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'motion/react'
+import { ArrowLeft } from 'lucide-react'
 import { db } from '../db/database'
-import { Card } from '../components/ui/Card'
 import { DynamicIcon } from '../components/ui/DynamicIcon'
-import { Button } from '../components/ui/Button'
+import { SwipeToDelete } from '../components/ui/SwipeToDelete'
+import { useSnackbar } from '../components/ui/Snackbar'
+import { LogRow } from '../components/exercise/LogRow'
+import { ConsistencyHeatmap } from '../components/charts/ConsistencyHeatmap'
 import { useLoggerStore } from '../stores/loggerStore'
-import { formatDate } from '../lib/dateUtils'
+import { useHaptic } from '../hooks/useHaptic'
+import { formatDate, todayStr } from '../lib/dateUtils'
+import type { Session } from '../types'
+
+const PAGE_SIZE = 20
 
 export function ExerciseDetailScreen() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const openLogger = useLoggerStore((s) => s.openLogger)
+  const openEditor = useLoggerStore((s) => s.openEditor)
+  const snackbar = useSnackbar()
+  const haptic = useHaptic()
+  const [limit, setLimit] = useState(PAGE_SIZE)
 
-  const exercise = useLiveQuery(
-    () => db.exercises.get(Number(id)),
-    [id],
-  )
+  const exercise = useLiveQuery(() => db.exercises.get(Number(id)), [id])
 
+  // One query feeds stats, heatmap and history
   const sessions = useLiveQuery(
-    () =>
-      db.sessions
-        .where('exerciseId')
-        .equals(Number(id))
-        .reverse()
-        .sortBy('createdAt'),
+    async () => {
+      const rows = await db.sessions.where('exerciseId').equals(Number(id)).toArray()
+      // newest day first; within a day, newest set first
+      return rows.sort(
+        (a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt),
+      )
+    },
     [id],
   )
+
+  if (!exercise) return null
 
   const totalReps = sessions?.reduce((sum, s) => sum + s.reps, 0) ?? 0
   const sessionCount = sessions?.length ?? 0
   const avgPerSession = sessionCount > 0 ? Math.round(totalReps / sessionCount) : 0
 
-  const repsByDate = new Map<string, number>()
-  sessions?.forEach((s) => {
-    repsByDate.set(s.date, (repsByDate.get(s.date) || 0) + s.reps)
-  })
-  const bestDay = repsByDate.size > 0 ? Math.max(...repsByDate.values()) : 0
+  const totalsByDate = new Map<string, number>()
+  for (const s of sessions ?? []) {
+    totalsByDate.set(s.date, (totalsByDate.get(s.date) ?? 0) + s.reps)
+  }
+  const bestDay = totalsByDate.size > 0 ? Math.max(...totalsByDate.values()) : 0
 
-  if (!exercise) return null
+  const visible = sessions?.slice(0, limit) ?? []
+  const groups: { date: string; total: number; rows: Session[] }[] = []
+  for (const s of visible) {
+    const last = groups[groups.length - 1]
+    if (last && last.date === s.date) {
+      last.rows.push(s)
+      last.total += s.reps
+    } else {
+      groups.push({ date: s.date, total: s.reps, rows: [s] })
+    }
+  }
+  const remaining = (sessions?.length ?? 0) - visible.length
+
+  async function deleteSession(session: Session) {
+    await db.sessions.delete(session.id!)
+    haptic.tick()
+    snackbar.show({
+      message: `Deleted ${session.reps} ${exercise?.name ?? 'reps'}`,
+      actionLabel: 'Undo',
+      onAction: () => {
+        db.sessions.add({
+          exerciseId: session.exerciseId,
+          reps: session.reps,
+          date: session.date,
+          notes: session.notes,
+          createdAt: session.createdAt,
+        })
+      },
+    })
+  }
 
   return (
-    <>
-      <div className="px-5 safe-top pb-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-1.5 min-h-11 pr-2 text-sm text-navy-500 hover:text-navy-700 dark:hover:text-navy-300 transition-colors mb-2"
+    <div className="px-5 safe-top pb-4">
+      <button
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-1.5 min-h-11 pr-2 type-label text-text-mute mb-2"
+      >
+        <ArrowLeft size={16} />
+        Back
+      </button>
+
+      <div className="flex items-center gap-4 mb-6">
+        <div
+          className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
+          style={{ backgroundColor: exercise.color + '1F', color: exercise.color }}
         >
-          <ArrowLeft size={16} />
-          Back
-        </button>
-
-        <div className="flex items-center gap-4 mb-6">
-          <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center"
-            style={{ backgroundColor: exercise.color + '18', color: exercise.color }}
-          >
-            <DynamicIcon name={exercise.icon} size={28} />
-          </div>
-          <div>
-            <h1 className="font-display text-2xl font-bold text-navy-900 dark:text-white">
-              {exercise.name}
-            </h1>
-            <p className="text-sm text-navy-400 capitalize">{exercise.category} body</p>
-          </div>
+          <DynamicIcon name={exercise.icon} size={26} />
         </div>
-
-        <div className="grid grid-cols-3 gap-3 mb-5">
-          {[
-            { label: 'Total', value: totalReps },
-            { label: 'Best Day', value: bestDay },
-            { label: 'Avg/Session', value: avgPerSession },
-          ].map((stat) => (
-            <Card key={stat.label} className="p-3 text-center">
-              <p className="font-mono text-xl font-medium tabular-nums text-navy-900 dark:text-white">
-                {stat.value.toLocaleString()}
-              </p>
-              <p className="text-[10px] text-navy-400 mt-0.5">{stat.label}</p>
-            </Card>
-          ))}
-        </div>
-
-        <Button onClick={() => openLogger(exercise.id)} fullWidth>
-          Log Reps
-        </Button>
-
-        <div className="mt-6">
-          <h2 className="font-display text-sm font-bold text-navy-900 dark:text-white mb-3 uppercase tracking-wide">
-            History
-          </h2>
-          {sessions?.length === 0 ? (
-            <p className="text-sm text-navy-400 text-center py-6">No sessions yet</p>
-          ) : (
-            <div className="space-y-2">
-              {sessions?.slice(0, 20).map((s, i) => (
-                <motion.div
-                  key={s.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.03 }}
-                >
-                  <Card className="p-3 flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-navy-900 dark:text-white">
-                        {s.reps} reps
-                      </p>
-                      <p className="text-xs text-navy-400">{formatDate(s.date)}</p>
-                    </div>
-                    <button
-                      onClick={async () => {
-                        if (!window.confirm(`Delete ${s.reps} reps logged on ${formatDate(s.date)}?`)) return
-                        await db.sessions.delete(s.id!)
-                      }}
-                      aria-label={`Delete ${s.reps} reps on ${formatDate(s.date)}`}
-                      className="w-11 h-11 flex items-center justify-center rounded-lg text-navy-300 hover:text-coral-500 hover:bg-coral-50 dark:hover:bg-coral-900/20 transition-colors"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          )}
+        <div className="min-w-0">
+          <h1 className="type-title text-text truncate">{exercise.name}</h1>
+          <p className="type-caption text-text-faint capitalize mt-0.5">
+            {exercise.category} body
+          </p>
         </div>
       </div>
-    </>
+
+      <div className="grid grid-cols-3 gap-3 mb-5">
+        {[
+          { label: 'Total', value: totalReps },
+          { label: 'Best day', value: bestDay },
+          { label: 'Avg / set', value: avgPerSession },
+        ].map((stat) => (
+          <div
+            key={stat.label}
+            className="p-3 text-center bg-surface border border-hairline rounded-[var(--radius-tile)]"
+          >
+            <p className="num-md text-text">{stat.value.toLocaleString()}</p>
+            <p className="type-caption text-text-faint mt-0.5">{stat.label}</p>
+          </div>
+        ))}
+      </div>
+
+      <section className="p-4 bg-surface border border-hairline rounded-[var(--radius-card)] mb-6">
+        <div className="flex items-baseline justify-between mb-3">
+          <h2 className="type-heading text-text">Consistency</h2>
+          <span className="type-caption text-text-faint">Last 12 weeks</span>
+        </div>
+        <ConsistencyHeatmap totalsByDate={totalsByDate} />
+      </section>
+
+      <section>
+        <h2 className="type-heading text-text mb-2">History</h2>
+        {sessions === undefined ? null : sessions.length === 0 ? (
+          <div className="p-6 text-center bg-surface border border-hairline rounded-[var(--radius-card)]">
+            <p className="type-body text-text-mute">No sets logged yet.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {groups.map((group) => (
+              <div key={group.date}>
+                <div className="flex items-baseline justify-between px-1 mb-1.5">
+                  <span className="type-caption uppercase text-text-faint">
+                    {group.date === todayStr() ? 'Today' : formatDate(group.date)}
+                  </span>
+                  <span className="num-sm text-text-mute">{group.total}</span>
+                </div>
+                <div className="space-y-2">
+                  <AnimatePresence initial={false}>
+                    {group.rows.map((session) => (
+                      <motion.div
+                        key={session.id}
+                        layout
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
+                      >
+                        <SwipeToDelete
+                          confirm={false}
+                          label="Delete"
+                          onDelete={() => deleteSession(session)}
+                        >
+                          <LogRow
+                            session={session}
+                            exercise={exercise}
+                            onClick={() => openEditor(session)}
+                          />
+                        </SwipeToDelete>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </div>
+            ))}
+            {remaining > 0 && (
+              <button
+                onClick={() => setLimit((l) => l + PAGE_SIZE)}
+                className="w-full min-h-11 rounded-full bg-surface-2 border border-hairline type-label text-text-mute"
+              >
+                Show more ({remaining} older)
+              </button>
+            )}
+          </div>
+        )}
+      </section>
+
+      <div className="sticky bottom-28 mt-6 z-20">
+        <button
+          onClick={() => openLogger(exercise.id)}
+          className="w-full min-h-14 rounded-2xl bg-accent text-accent-ink type-heading shadow-[0_4px_16px_rgb(45_212_207/0.25)]"
+        >
+          Log {exercise.name.toLowerCase()}
+        </button>
+      </div>
+    </div>
   )
 }
