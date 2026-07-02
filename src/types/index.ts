@@ -40,6 +40,8 @@ export interface AchievementDef {
   description: string
   icon: string
   rule: (stats: AchievementStats) => boolean
+  /** Live progress toward the unlock, for the badge ring + "450/1000" caption. */
+  progress: (stats: AchievementStats) => { current: number; target: number }
 }
 
 export interface AchievementStats {

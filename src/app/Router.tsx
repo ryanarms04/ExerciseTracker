@@ -3,9 +3,8 @@ import { ErrorBoundary } from '../components/ErrorBoundary'
 import { Layout } from './Layout'
 import { TodayScreen } from '../screens/TodayScreen'
 import { WorkoutsScreen } from '../screens/WorkoutsScreen'
-import { ProfileScreen } from '../screens/ProfileScreen'
+import { YouScreen } from '../screens/YouScreen'
 import { ExerciseDetailScreen } from '../screens/ExerciseDetailScreen'
-import { SettingsScreen } from '../screens/SettingsScreen'
 
 export function Router() {
   return (
@@ -14,13 +13,13 @@ export function Router() {
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<TodayScreen />} />
-            <Route path="you" element={<ProfileScreen />} />
+            <Route path="you" element={<YouScreen />} />
             <Route path="library" element={<WorkoutsScreen />} />
             <Route path="exercise/:id" element={<ExerciseDetailScreen />} />
-            <Route path="settings" element={<SettingsScreen />} />
-            {/* old tab URLs live in muscle memory and bookmarks */}
+            {/* old URLs live in muscle memory and bookmarks */}
             <Route path="workouts" element={<Navigate to="/library" replace />} />
             <Route path="profile" element={<Navigate to="/you" replace />} />
+            <Route path="settings" element={<Navigate to="/you" replace />} />
           </Route>
         </Routes>
       </ErrorBoundary>

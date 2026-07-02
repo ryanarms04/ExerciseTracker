@@ -7,6 +7,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     description: 'Log your very first rep',
     icon: 'zap',
     rule: (s) => s.totalReps >= 1,
+    progress: (s) => ({ current: Math.min(s.totalReps, 1), target: 1 }),
   },
   {
     key: 'century',
@@ -14,6 +15,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     description: 'Reach 100 total reps',
     icon: 'award',
     rule: (s) => s.totalReps >= 100,
+    progress: (s) => ({ current: Math.min(s.totalReps, 100), target: 100 }),
   },
   {
     key: 'thousand',
@@ -21,6 +23,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     description: 'Reach 1,000 total reps',
     icon: 'crown',
     rule: (s) => s.totalReps >= 1000,
+    progress: (s) => ({ current: Math.min(s.totalReps, 1000), target: 1000 }),
   },
   {
     key: 'streak_3',
@@ -28,6 +31,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     description: 'Work out 3 days in a row',
     icon: 'flame',
     rule: (s) => s.currentStreak >= 3,
+    progress: (s) => ({ current: Math.min(s.currentStreak, 3), target: 3 }),
   },
   {
     key: 'streak_7',
@@ -35,6 +39,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     description: 'Work out 7 days in a row',
     icon: 'shield',
     rule: (s) => s.currentStreak >= 7,
+    progress: (s) => ({ current: Math.min(s.currentStreak, 7), target: 7 }),
   },
   {
     key: 'streak_30',
@@ -42,6 +47,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     description: 'Work out 30 days in a row',
     icon: 'trophy',
     rule: (s) => s.currentStreak >= 30,
+    progress: (s) => ({ current: Math.min(s.currentStreak, 30), target: 30 }),
   },
   {
     key: 'five_exercises',
@@ -49,6 +55,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     description: 'Use 5 different exercises',
     icon: 'target',
     rule: (s) => s.uniqueExercises >= 5,
+    progress: (s) => ({ current: Math.min(s.uniqueExercises, 5), target: 5 }),
   },
   {
     key: 'daily_goal',
@@ -56,6 +63,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     description: 'Hit your daily rep goal',
     icon: 'check-circle',
     rule: (s) => s.todayReps >= s.dailyGoal,
+    progress: (s) => ({ current: Math.min(s.todayReps, s.dailyGoal), target: s.dailyGoal }),
   },
   {
     key: 'early_bird',
@@ -63,6 +71,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     description: 'Log reps before 7am',
     icon: 'sunrise',
     rule: (s) => s.loggedBefore7am,
+    progress: (s) => ({ current: s.loggedBefore7am ? 1 : 0, target: 1 }),
   },
   {
     key: 'night_owl',
@@ -70,5 +79,6 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     description: 'Log reps after 10pm',
     icon: 'moon',
     rule: (s) => s.loggedAfter10pm,
+    progress: (s) => ({ current: s.loggedAfter10pm ? 1 : 0, target: 1 }),
   },
 ]
