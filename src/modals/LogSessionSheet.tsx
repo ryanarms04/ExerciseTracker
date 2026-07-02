@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion, AnimatePresence, useAnimation } from 'motion/react'
-import { RotateCcw } from 'lucide-react'
+import { RotateCcw, Play, Pause } from 'lucide-react'
 import { Sheet } from '../components/ui/Sheet'
 import { DateChip } from '../components/ui/DateChip'
 import { ExerciseCarousel } from '../components/exercise/ExerciseCarousel'
 import { WeekStrip } from '../components/navigation/WeekStrip'
 import { CircularDial } from '../components/counter/CircularDial'
-import { HoldTimer } from '../components/counter/HoldTimer'
+import { SecondsTimer } from '../components/counter/SecondsTimer'
 import { useSnackbar } from '../components/ui/Snackbar'
 import { db } from '../db/database'
 import { useHaptic } from '../hooks/useHaptic'
@@ -38,6 +38,7 @@ export function LogSessionSheet({
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [selectedDate, setSelectedDate] = useState(todayStr())
   const [showPicker, setShowPicker] = useState(false)
+  const [timerRunning, setTimerRunning] = useState(false)
   const wasOpen = useRef(false)
 
   const controls = useAnimation()
@@ -53,6 +54,7 @@ export function LogSessionSheet({
       setSelectedId(editSession?.exerciseId ?? initialExercise?.id ?? null)
       setSelectedDate(editSession?.date ?? initialDate ?? todayStr())
       setShowPicker(false)
+      setTimerRunning(false)
     }
     wasOpen.current = open
   }, [open, editSession, initialExercise, initialDate])
@@ -112,6 +114,7 @@ export function LogSessionSheet({
       if (!ok) return
       setCount(0)
     }
+    setTimerRunning(false)
     setSelectedId(ex.id!)
   }
 
@@ -129,6 +132,7 @@ export function LogSessionSheet({
 
   async function handleBank() {
     if (!selected?.id || count === 0) return
+    setTimerRunning(false)
     haptic.success()
 
     if (editSession?.id) {
@@ -231,9 +235,14 @@ export function LogSessionSheet({
             style={{ width: DIAL_SIZE, height: DIAL_SIZE }}
           >
             {isDuration ? (
-              <HoldTimer
+              <SecondsTimer
                 size={DIAL_SIZE}
                 count={count}
+                running={timerRunning}
+                onToggle={() => {
+                  haptic.tick()
+                  setTimerRunning((v) => !v)
+                }}
                 onTick={increment}
                 color={selected.color}
               />
@@ -253,11 +262,16 @@ export function LogSessionSheet({
               style={{ opacity: 0 }}
             />
             {isDuration ? (
-              <div className="absolute flex items-baseline gap-0.5 pointer-events-none">
-                <motion.span animate={controls} className="num-hero text-text">
-                  {count}
-                </motion.span>
-                <span className="num-sm text-text-faint">s</span>
+              <div className="absolute flex flex-col items-center pointer-events-none">
+                <div className="flex items-baseline gap-0.5">
+                  <motion.span animate={controls} className="num-hero text-text">
+                    {count}
+                  </motion.span>
+                  <span className="num-sm text-text-faint">s</span>
+                </div>
+                <span className="mt-1.5 text-text-faint" aria-hidden>
+                  {timerRunning ? <Pause size={16} /> : <Play size={16} />}
+                </span>
               </div>
             ) : (
               /* The whole inner circle is the +1 target — bigger than any button */
@@ -277,7 +291,11 @@ export function LogSessionSheet({
           </div>
 
           <p className="type-caption text-text-faint -mt-2">
-            {isDuration ? 'Hold the circle to run the timer' : 'Spin the ring · tap the middle for +1'}
+            {isDuration
+              ? timerRunning
+                ? 'Counting — tap the circle to stop'
+                : 'Tap the circle to start the timer'
+              : 'Spin the ring · tap the middle for +1'}
           </p>
 
           <div className="flex items-center justify-center gap-1.5 flex-wrap">
@@ -292,6 +310,7 @@ export function LogSessionSheet({
               disabled={count === 0}
               onClick={() => {
                 setCount(0)
+                setTimerRunning(false)
                 haptic.tick()
               }}
               aria-label="Reset count"

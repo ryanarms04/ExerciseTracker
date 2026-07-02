@@ -47,7 +47,7 @@ export function Sheet({ open, onClose, title, headerRight, children }: SheetProp
             {title && <h2 className="type-heading text-text">{title}</h2>}
             {headerRight && <div className="ml-auto">{headerRight}</div>}
           </div>
-          <div className="flex-1 overflow-y-auto px-5 py-6">{children}</div>
+          <div className="flex-1 overflow-y-auto overflow-x-hidden px-5 py-6">{children}</div>
         </motion.div>
       )}
     </AnimatePresence>

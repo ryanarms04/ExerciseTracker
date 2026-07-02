@@ -30,7 +30,9 @@ export function ExerciseCarousel({ exercises, selectedId, onSelect, locked }: Ex
   return (
     <div
       ref={scrollRef}
-      className="flex gap-1 overflow-x-auto scrollbar-hide snap-x -mx-5 px-5 no-select"
+      // w-full + max-w-full: without a width bound the flex column sizes this
+      // to its content and the whole sheet scrolls sideways instead of the strip
+      className="w-full max-w-full flex gap-1 overflow-x-auto scrollbar-hide snap-x px-2 no-select"
     >
       {exercises.map((ex) => {
         const selected = ex.id === selectedId
