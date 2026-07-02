@@ -6,12 +6,14 @@ interface SwipeToDeleteProps {
   children: React.ReactNode
   onDelete: () => void
   label?: string
+  /** false = fire onDelete on release (undo-based flows); true = inline confirm. */
+  confirm?: boolean
 }
 
 const THRESHOLD = -80
 const DELETE_THRESHOLD = -140
 
-export function SwipeToDelete({ children, onDelete, label = 'Remove' }: SwipeToDeleteProps) {
+export function SwipeToDelete({ children, onDelete, label = 'Remove', confirm = true }: SwipeToDeleteProps) {
   const x = useMotionValue(0)
   const [confirming, setConfirming] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -21,7 +23,12 @@ export function SwipeToDelete({ children, onDelete, label = 'Remove' }: SwipeToD
 
   function handleDragEnd(_: unknown, info: PanInfo) {
     if (info.offset.x < DELETE_THRESHOLD) {
-      setConfirming(true)
+      if (confirm) {
+        setConfirming(true)
+      } else {
+        onDelete()
+        x.set(0)
+      }
     } else {
       x.set(0)
     }
@@ -69,10 +76,10 @@ export function SwipeToDelete({ children, onDelete, label = 'Remove' }: SwipeToD
   return (
     <div ref={containerRef} className="relative overflow-hidden rounded-[var(--radius-card)]">
       <motion.div
-        className="absolute inset-0 flex items-center justify-end pr-6 rounded-[var(--radius-card)] bg-coral-500"
+        className="absolute inset-0 flex items-center justify-end pr-6 rounded-[var(--radius-card)] bg-danger"
         style={{ opacity: bgOpacity }}
       >
-        <motion.div style={{ scale: iconScale }} className="flex items-center gap-2 text-white">
+        <motion.div style={{ scale: iconScale }} className="flex items-center gap-2 text-danger-ink">
           <Trash2 size={18} />
           <span className="text-sm font-semibold">{label}</span>
         </motion.div>

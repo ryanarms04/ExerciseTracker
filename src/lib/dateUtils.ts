@@ -38,20 +38,6 @@ export function getGreeting(): string {
   return 'Good evening'
 }
 
-export function relativeTime(iso: string): string {
-  const now = Date.now()
-  const then = new Date(iso).getTime()
-  const diff = now - then
-  const mins = Math.floor(diff / 60_000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  if (days === 1) return 'yesterday'
-  return `${days}d ago`
-}
-
 export function formatDate(dateStr: string): string {
   return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
     weekday: 'short',
