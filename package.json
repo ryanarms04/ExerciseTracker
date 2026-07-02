@@ -11,6 +11,9 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@fontsource/jetbrains-mono": "^5.2.8",
+    "@fontsource/plus-jakarta-sans": "^5.2.8",
+    "@fontsource/space-grotesk": "^5.2.10",
     "@tailwindcss/vite": "^4.3.2",
     "dexie": "^4.4.4",
     "dexie-react-hooks": "^4.4.0",
