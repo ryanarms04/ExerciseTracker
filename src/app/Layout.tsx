@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import { BottomNav } from '../components/navigation/BottomNav'
+import { SnackbarHost } from '../components/ui/Snackbar'
 
 export function Layout() {
   return (
@@ -7,6 +8,7 @@ export function Layout() {
       <main className="pb-20 max-w-md mx-auto">
         <Outlet />
       </main>
+      <SnackbarHost />
       <BottomNav />
     </div>
   )
