@@ -60,12 +60,12 @@ export function RepCounter({ onSave, exerciseName, color = '#0EA5A2' }: RepCount
   }, [count, onSave, haptic])
 
   const dialSize = 220
-  const chipBase = 'px-3.5 py-2 rounded-full text-sm font-semibold transition-colors'
+  const chipBase = 'min-h-11 px-3.5 py-2 rounded-full text-sm font-semibold transition-colors'
   const addChip = `${chipBase} bg-navy-100 dark:bg-navy-800 text-navy-700 dark:text-navy-300 hover:bg-teal-50 hover:text-teal-600 dark:hover:bg-teal-900/30 dark:hover:text-teal-400`
   const subChip = `${chipBase} bg-navy-100 dark:bg-navy-800 text-navy-700 dark:text-navy-300 hover:bg-coral-50 hover:text-coral-500 dark:hover:bg-coral-900/20 dark:hover:text-coral-400`
 
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="flex flex-col items-center gap-6 no-select">
       <h3 className="font-display text-lg font-bold text-navy-900 dark:text-white">
         {exerciseName}
       </h3>
@@ -97,6 +97,7 @@ export function RepCounter({ onSave, exerciseName, color = '#0EA5A2' }: RepCount
         <button
           onClick={decrement}
           disabled={count === 0}
+          aria-label="Subtract one rep"
           className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 w-11 h-11 flex items-center justify-center rounded-full bg-navy-100 dark:bg-navy-800 text-navy-600 dark:text-navy-300 hover:bg-navy-200 dark:hover:bg-navy-700 transition-colors disabled:opacity-30 shadow-sm z-10"
         >
           <Minus size={18} />
@@ -104,6 +105,7 @@ export function RepCounter({ onSave, exerciseName, color = '#0EA5A2' }: RepCount
 
         <button
           onClick={increment}
+          aria-label="Add one rep"
           className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 w-11 h-11 flex items-center justify-center rounded-full bg-teal-500 text-white hover:bg-teal-600 active:bg-teal-700 transition-colors shadow-sm z-10"
         >
           <Plus size={18} />

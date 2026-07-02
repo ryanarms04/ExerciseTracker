@@ -225,6 +225,11 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+:focus-visible {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 2px;
+}
+
 html {
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
@@ -234,6 +239,8 @@ html {
 body {
   margin: 0;
   overflow-x: hidden;
+  /* Installed PWA: no rubber-band scroll behind the app shell */
+  overscroll-behavior-y: none;
   background-color: var(--color-navy-50);
   transition: background-color 0.2s ease;
 }
@@ -279,4 +286,17 @@ body {
 
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Top padding for top-level screens: clears the status bar in the installed
+   PWA, plain 16px in a browser tab (replaces the old pt-14 guess). */
+.safe-top {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
+}
+
+/* Counters, dials and chips: no text selection or iOS long-press loupe */
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }

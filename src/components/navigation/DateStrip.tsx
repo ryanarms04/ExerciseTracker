@@ -44,7 +44,7 @@ export function DateStrip({ selectedDate, onSelect }: DateStripProps) {
   return (
     <div
       ref={scrollRef}
-      className="flex gap-1.5 overflow-x-auto scrollbar-hide snap-x snap-mandatory px-5 py-2"
+      className="flex gap-1.5 overflow-x-auto scrollbar-hide snap-x snap-mandatory px-5 py-2 no-select"
     >
       {dates.map((date) => {
         const { weekday, day } = formatDay(date)

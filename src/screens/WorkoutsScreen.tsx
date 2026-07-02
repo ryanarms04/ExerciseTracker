@@ -49,7 +49,7 @@ export function WorkoutsScreen() {
 
   return (
     <>
-      <div className="px-5 pt-14 pb-4">
+      <div className="px-5 safe-top pb-4">
         <h1 className="font-display text-2xl font-bold text-navy-900 dark:text-white">
           Workouts
         </h1>
@@ -108,7 +108,7 @@ export function WorkoutsScreen() {
                           <Link
                             to={`/exercise/${ex.id}`}
                             onClick={(e) => e.stopPropagation()}
-                            className="inline-block text-xs text-navy-400 hover:text-teal-500 transition-colors mt-1 px-2 py-1"
+                            className="inline-flex items-center min-h-11 text-xs text-navy-400 hover:text-teal-500 transition-colors px-2"
                           >
                             Details →
                           </Link>
@@ -118,7 +118,7 @@ export function WorkoutsScreen() {
                         <Link
                           to={`/exercise/${ex.id}`}
                           onClick={(e) => e.stopPropagation()}
-                          className="text-xs text-navy-400 hover:text-teal-500 transition-colors px-2 py-2"
+                          className="inline-flex items-center min-h-11 text-xs text-navy-400 hover:text-teal-500 transition-colors px-2"
                         >
                           Details →
                         </Link>

@@ -44,10 +44,10 @@ export function ExerciseDetailScreen() {
 
   return (
     <>
-      <div className="px-5 pt-14 pb-4">
+      <div className="px-5 safe-top pb-4">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-1.5 text-sm text-navy-500 hover:text-navy-700 dark:hover:text-navy-300 transition-colors mb-4"
+          className="flex items-center gap-1.5 min-h-11 pr-2 text-sm text-navy-500 hover:text-navy-700 dark:hover:text-navy-300 transition-colors mb-2"
         >
           <ArrowLeft size={16} />
           Back

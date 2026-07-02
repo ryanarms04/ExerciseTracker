@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { MotionConfig } from 'motion/react'
 import { Router } from './Router'
 import { useTheme } from '../hooks/useTheme'
 import { seedDatabase } from '../db/seed'
@@ -10,5 +11,9 @@ export default function App() {
     seedDatabase()
   }, [])
 
-  return <Router />
+  return (
+    <MotionConfig reducedMotion="user">
+      <Router />
+    </MotionConfig>
+  )
 }

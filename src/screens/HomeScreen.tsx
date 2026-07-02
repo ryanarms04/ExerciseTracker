@@ -72,7 +72,7 @@ export function HomeScreen() {
 
   return (
     <>
-      <div className="relative noise-overlay hero-bottom bg-gradient-to-br from-navy-900 via-navy-900 to-teal-900 px-5 pt-14 pb-5">
+      <div className="relative noise-overlay hero-bottom bg-gradient-to-br from-navy-900 via-navy-900 to-teal-900 px-5 safe-top pb-5">
         <div className="flex items-start justify-between mb-4">
           <div>
             <p className="text-navy-400 text-sm font-medium">{getGreeting()}</p>
@@ -82,7 +82,8 @@ export function HomeScreen() {
           </div>
           <Link
             to="/settings"
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20 transition-colors"
+            aria-label="Settings"
+            className="w-11 h-11 flex items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20 transition-colors"
           >
             <Settings size={18} />
           </Link>

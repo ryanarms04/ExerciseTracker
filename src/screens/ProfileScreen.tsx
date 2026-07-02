@@ -40,7 +40,7 @@ export function ProfileScreen() {
   ]
 
   return (
-    <div className="px-5 pt-14 pb-4 space-y-5">
+    <div className="px-5 safe-top pb-4 space-y-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white font-display font-bold text-lg">
@@ -55,7 +55,8 @@ export function ProfileScreen() {
         </div>
         <Link
           to="/settings"
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-navy-100 dark:bg-navy-800 text-navy-500 hover:bg-navy-200 dark:hover:bg-navy-700 transition-colors"
+          aria-label="Settings"
+          className="w-11 h-11 flex items-center justify-center rounded-full bg-navy-100 dark:bg-navy-800 text-navy-500 hover:bg-navy-200 dark:hover:bg-navy-700 transition-colors"
         >
           <Settings size={18} />
         </Link>
