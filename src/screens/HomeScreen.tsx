@@ -10,12 +10,14 @@ import { StreakDots } from '../components/charts/StreakDots'
 import { DateStrip } from '../components/navigation/DateStrip'
 import { LogSessionSheet } from '../modals/LogSessionSheet'
 import { useSettingsStore } from '../stores/settingsStore'
+import { useDayStore } from '../stores/dayStore'
 import { getGreeting, todayStr, relativeTime, formatDate } from '../lib/dateUtils'
 import type { Exercise } from '../types'
 
 export function HomeScreen() {
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null)
-  const [selectedDate, setSelectedDate] = useState(todayStr())
+  const selectedDate = useDayStore((s) => s.selectedDate)
+  const setSelectedDate = useDayStore((s) => s.setSelectedDate)
   const lastKnownToday = useRef(todayStr())
   const userName = useSettingsStore((s) => s.userName)
   const dailyGoal = useSettingsStore((s) => s.dailyGoal)
@@ -29,7 +31,8 @@ export function HomeScreen() {
       const prevToday = lastKnownToday.current
       if (now === prevToday) return
       lastKnownToday.current = now
-      setSelectedDate((sel) => (sel === prevToday ? now : sel))
+      const { selectedDate: sel, setSelectedDate: set } = useDayStore.getState()
+      if (sel === prevToday) set(now)
     }
     document.addEventListener('visibilitychange', refreshToday)
     window.addEventListener('focus', refreshToday)

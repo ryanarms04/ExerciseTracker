@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import { Layout } from './Layout'
 import { HomeScreen } from '../screens/HomeScreen'
@@ -12,13 +12,16 @@ export function Router() {
     <HashRouter>
       <ErrorBoundary>
         <Routes>
-        <Route element={<Layout />}>
-          <Route index element={<HomeScreen />} />
-          <Route path="workouts" element={<WorkoutsScreen />} />
-          <Route path="profile" element={<ProfileScreen />} />
-          <Route path="exercise/:id" element={<ExerciseDetailScreen />} />
-          <Route path="settings" element={<SettingsScreen />} />
-        </Route>
+          <Route element={<Layout />}>
+            <Route index element={<HomeScreen />} />
+            <Route path="you" element={<ProfileScreen />} />
+            <Route path="library" element={<WorkoutsScreen />} />
+            <Route path="exercise/:id" element={<ExerciseDetailScreen />} />
+            <Route path="settings" element={<SettingsScreen />} />
+            {/* old tab URLs live in muscle memory and bookmarks */}
+            <Route path="workouts" element={<Navigate to="/library" replace />} />
+            <Route path="profile" element={<Navigate to="/you" replace />} />
+          </Route>
         </Routes>
       </ErrorBoundary>
     </HashRouter>

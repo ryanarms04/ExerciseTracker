@@ -51,7 +51,7 @@ export function WorkoutsScreen() {
     <>
       <div className="px-5 safe-top pb-4">
         <h1 className="font-display text-2xl font-bold text-navy-900 dark:text-white">
-          Workouts
+          Library
         </h1>
 
         <SegmentedControl

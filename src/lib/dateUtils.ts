@@ -9,17 +9,26 @@ export function todayStr(): string {
   return toDateStr(new Date())
 }
 
-export function getWeekDates(): string[] {
-  const today = new Date()
-  const dow = today.getDay()
-  const monday = new Date(today)
-  monday.setDate(today.getDate() - ((dow + 6) % 7))
+/** Calendar-day arithmetic on YYYY-MM-DD strings (local, DST-safe: setDate
+    normalizes across 23/25-hour days). */
+export function addDaysStr(dateStr: string, days: number): string {
+  const d = new Date(dateStr + 'T00:00:00')
+  d.setDate(d.getDate() + days)
+  return toDateStr(d)
+}
 
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday)
-    d.setDate(monday.getDate() + i)
-    return toDateStr(d)
-  })
+/** Monday of the week containing the given date. */
+export function mondayOf(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00')
+  const dow = d.getDay()
+  d.setDate(d.getDate() - ((dow + 6) % 7))
+  return toDateStr(d)
+}
+
+/** Mon–Sun of the week containing `anchor` (default: today). */
+export function getWeekDates(anchor?: string): string[] {
+  const monday = mondayOf(anchor ?? todayStr())
+  return Array.from({ length: 7 }, (_, i) => addDaysStr(monday, i))
 }
 
 export function getGreeting(): string {
@@ -53,4 +62,11 @@ export function formatDate(dateStr: string): string {
 
 export function getDayOfWeekShort(dateStr: string): string {
   return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' })
+}
+
+/** "7:12 pm" — the session's own wall-clock time. */
+export function formatTime(iso: string): string {
+  return new Date(iso)
+    .toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    .toLowerCase()
 }

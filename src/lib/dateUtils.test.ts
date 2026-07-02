@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { toDateStr, todayStr, getWeekDates } from './dateUtils'
+import { toDateStr, todayStr, getWeekDates, addDaysStr, mondayOf } from './dateUtils'
 
 describe('toDateStr', () => {
   it('pads month and day', () => {
@@ -54,5 +54,40 @@ describe('getWeekDates', () => {
   it('crosses a year boundary', () => {
     vi.setSystemTime(new Date(2027, 0, 1)) // Fri 1 Jan 2027
     expect(getWeekDates()[0]).toBe('2026-12-28')
+  })
+
+  it('accepts an anchor date for past weeks (WeekStrip paging)', () => {
+    expect(getWeekDates('2026-06-22')).toEqual([
+      '2026-06-22',
+      '2026-06-23',
+      '2026-06-24',
+      '2026-06-25',
+      '2026-06-26',
+      '2026-06-27',
+      '2026-06-28',
+    ])
+  })
+})
+
+describe('addDaysStr / mondayOf (Sydney DST)', () => {
+  it('steps across spring-forward (2026-10-04, 23h day)', () => {
+    expect(addDaysStr('2026-10-03', 1)).toBe('2026-10-04')
+    expect(addDaysStr('2026-10-04', 1)).toBe('2026-10-05')
+    expect(addDaysStr('2026-10-05', -1)).toBe('2026-10-04')
+  })
+
+  it('steps across fall-back (2026-04-05, 25h day)', () => {
+    expect(addDaysStr('2026-04-04', 1)).toBe('2026-04-05')
+    expect(addDaysStr('2026-04-05', 1)).toBe('2026-04-06')
+  })
+
+  it('steps a whole week back', () => {
+    expect(addDaysStr('2026-07-06', -7)).toBe('2026-06-29')
+  })
+
+  it('finds Monday across DST and month boundaries', () => {
+    expect(mondayOf('2026-10-04')).toBe('2026-09-28') // Sun in DST-switch week
+    expect(mondayOf('2026-07-01')).toBe('2026-06-29')
+    expect(mondayOf('2026-06-29')).toBe('2026-06-29') // Monday is its own Monday
   })
 })

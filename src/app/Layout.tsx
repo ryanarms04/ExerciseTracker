@@ -1,15 +1,18 @@
 import { Outlet } from 'react-router-dom'
-import { BottomNav } from '../components/navigation/BottomNav'
+import { TabBar } from '../components/navigation/TabBar'
 import { SnackbarHost } from '../components/ui/Snackbar'
+import { LoggerHost } from '../modals/LoggerHost'
 
 export function Layout() {
   return (
-    <div className="min-h-dvh bg-navy-50 dark:bg-navy-950 text-navy-900 dark:text-navy-100">
-      <main className="pb-20 max-w-md mx-auto">
+    <div className="min-h-dvh bg-bg text-text">
+      {/* pb clears the bar plus the FAB's 32px protrusion */}
+      <main className="pb-28 max-w-md mx-auto">
         <Outlet />
       </main>
       <SnackbarHost />
-      <BottomNav />
+      <LoggerHost />
+      <TabBar />
     </div>
   )
 }
