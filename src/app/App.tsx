@@ -10,6 +10,9 @@ import { todayStr } from '../lib/dateUtils'
 
 type Health = 'checking' | 'ok' | 'unavailable'
 
+/** One-shot: retires the pre-overlay celebration mark. */
+const CELEBRATION_RESET_KEY = 'exercise-tracker-celebration-reset'
+
 export default function App() {
   useTheme()
   const [health, setHealth] = useState<Health>('checking')
@@ -48,6 +51,19 @@ export default function App() {
         }
       } catch (err) {
         console.error('Goal history backfill failed:', err)
+      }
+
+      // The old build marked the day celebrated for a moment that was only a
+      // ring sweep. Anyone updating mid-day would have the new overlay silently
+      // suppressed, so clear that mark once — worst case the moment plays one
+      // extra time.
+      try {
+        if (localStorage.getItem(CELEBRATION_RESET_KEY) !== '1') {
+          useSettingsStore.getState().setLastGoalCelebration('')
+          localStorage.setItem(CELEBRATION_RESET_KEY, '1')
+        }
+      } catch {
+        /* storage blocked — the moment simply waits for tomorrow */
       }
     }
 

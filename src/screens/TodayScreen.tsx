@@ -17,13 +17,18 @@ import { useLoggerStore } from '../stores/loggerStore'
 import { useCelebrationStore } from '../stores/celebrationStore'
 import { useHaptic } from '../hooks/useHaptic'
 import { getGreeting, todayStr, formatDate } from '../lib/dateUtils'
+import { goalForDate } from '../lib/progress'
 import type { Exercise, Session } from '../types'
 
 export function TodayScreen() {
   const selectedDate = useDayStore((s) => s.selectedDate)
   const setSelectedDate = useDayStore((s) => s.setSelectedDate)
   const userName = useSettingsStore((s) => s.userName)
-  const dailyGoal = useSettingsStore((s) => s.dailyGoal)
+  const currentGoal = useSettingsStore((s) => s.dailyGoal)
+  const goalHistory = useSettingsStore((s) => s.goalHistory)
+  // The bar for the day being VIEWED — the same number the streak engine uses,
+  // so the ring can never say "goal crushed" about a day the streak rejects.
+  const dailyGoal = goalForDate(goalHistory, selectedDate, currentGoal)
   const openLogger = useLoggerStore((s) => s.openLogger)
   const openEditor = useLoggerStore((s) => s.openEditor)
   const snackbar = useSnackbar()
