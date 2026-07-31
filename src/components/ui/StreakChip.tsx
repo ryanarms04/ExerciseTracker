@@ -1,48 +1,39 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, useAnimation, AnimatePresence } from 'motion/react'
 import { Flame } from 'lucide-react'
-import { useLiveQuery } from 'dexie-react-hooks'
-import { db } from '../../db/database'
-import { useStreak } from '../../hooks/useStreak'
+import { useProgress } from '../../hooks/useProgress'
 import { useHaptic } from '../../hooks/useHaptic'
-import { todayStr } from '../../lib/dateUtils'
+import { ACHIEVEMENT_FAMILIES } from '../../lib/achievements'
 
-// The streak achievements, as countdown targets
-const MILESTONES = [
-  { target: 3, name: '3-Day Streak' },
-  { target: 7, name: 'Weekly Warrior' },
-  { target: 30, name: 'Monthly Monster' },
-]
+const STREAK_TIERS = ACHIEVEMENT_FAMILIES.find((f) => f.key === 'streak')?.tiers ?? []
 
 /**
  * 🔥 n — ember ring while a streak is alive; pulses once when it grows.
- * Tap for the fire: an animated flame with streak facts and what it takes
- * to keep it alive.
+ * Tap for the fire: an animated flame, what keeps the streak alive today,
+ * and the next rung on the streak ladder.
  */
 export function StreakChip() {
-  const streak = useStreak()
+  const progress = useProgress()
   const haptic = useHaptic()
   const controls = useAnimation()
   const prev = useRef<number | null>(null)
   const [open, setOpen] = useState(false)
 
-  const current = streak?.current ?? 0
-  const best = streak?.best ?? 0
+  const current = progress?.stats.currentStreak ?? 0
+  const best = progress?.stats.bestStreak ?? 0
+  const goalDays = progress?.stats.goalDays ?? 0
+  const todayMet = progress?.todayMet ?? false
+  const todayGoal = progress?.todayGoal ?? 0
+  const todayReps = progress?.stats.todayReps ?? 0
   const lit = current > 0
 
-  const todayLogged = useLiveQuery(async () => {
-    const first = await db.sessions.where('date').equals(todayStr()).first()
-    return !!first
-  }, [])
-
-  // One pulse when the first bank of the day extends the streak
   useEffect(() => {
-    if (streak === undefined) return
-    if (prev.current !== null && streak.current > prev.current) {
+    if (!progress) return
+    if (prev.current !== null && current > prev.current) {
       controls.start({ scale: [1, 1.2, 1], transition: { duration: 0.45 } })
     }
-    prev.current = streak.current
-  }, [streak, controls])
+    prev.current = current
+  }, [progress, current, controls])
 
   useEffect(() => {
     if (!open) return
@@ -53,14 +44,14 @@ export function StreakChip() {
     return () => document.removeEventListener('keydown', onKey)
   }, [open])
 
-  const nextMilestone = MILESTONES.find((m) => m.target > current)
+  const nextTier = STREAK_TIERS.find((t) => t.value > current)
+  const remaining = Math.max(todayGoal - todayReps, 0)
 
-  const statusLine =
-    current === 0
-      ? 'Bank any set to light the flame.'
-      : todayLogged
-        ? 'Today is banked — the flame is safe.'
-        : 'Log a set today to keep it burning.'
+  const statusLine = todayMet
+    ? "Today's goal is done — the flame is safe."
+    : current === 0
+      ? `Hit ${todayGoal} reps today to light the flame.`
+      : `${remaining} more reps today or the streak resets.`
 
   return (
     <div className="relative">
@@ -97,13 +88,11 @@ export function StreakChip() {
               aria-label="Streak details"
             >
               <div className="relative flex justify-center mb-3" aria-hidden>
-                {/* breathing ember glow */}
                 <motion.div
                   className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-ember blur-xl"
                   animate={{ opacity: lit ? [0.35, 0.6, 0.35] : 0.12, scale: [1, 1.15, 1] }}
                   transition={{ duration: 1.8, repeat: Infinity }}
                 />
-                {/* rising embers */}
                 {lit &&
                   [0, 1, 2].map((i) => (
                     <motion.span
@@ -114,7 +103,6 @@ export function StreakChip() {
                       transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.45 }}
                     />
                   ))}
-                {/* the flame itself, flickering */}
                 <motion.div
                   animate={
                     lit
@@ -133,7 +121,7 @@ export function StreakChip() {
               </p>
               <p
                 className={`type-caption text-center mt-1 ${
-                  current > 0 && !todayLogged ? 'text-ember' : 'text-text-faint'
+                  todayMet ? 'text-text-faint' : 'text-ember'
                 }`}
               >
                 {statusLine}
@@ -146,13 +134,19 @@ export function StreakChip() {
                     {best} day{best === 1 ? '' : 's'}
                   </span>
                 </div>
+                <div className="flex items-baseline justify-between">
+                  <span className="type-caption text-text-faint">Goals hit</span>
+                  <span className="num-sm text-text-mute">
+                    {goalDays} day{goalDays === 1 ? '' : 's'}
+                  </span>
+                </div>
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="type-caption text-text-faint">
-                    {nextMilestone ? `Next · ${nextMilestone.name}` : 'Milestones'}
+                    {nextTier ? `Next · ${nextTier.name}` : 'Milestones'}
                   </span>
                   <span className="num-sm text-text-mute whitespace-nowrap">
-                    {nextMilestone
-                      ? `${nextMilestone.target - current} day${nextMilestone.target - current === 1 ? '' : 's'} to go`
+                    {nextTier
+                      ? `${nextTier.value - current} day${nextTier.value - current === 1 ? '' : 's'} to go`
                       : 'All crushed 🔥'}
                   </span>
                 </div>

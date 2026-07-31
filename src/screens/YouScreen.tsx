@@ -1,7 +1,5 @@
-import { useEffect, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Link } from 'react-router-dom'
-import { motion, useAnimation } from 'motion/react'
 import { Flame, ChevronRight, Download, Upload, Minus, Plus } from 'lucide-react'
 import { db } from '../db/database'
 import { Button } from '../components/ui/Button'
@@ -11,9 +9,9 @@ import { SegmentedControl } from '../components/ui/SegmentedControl'
 import { DynamicIcon } from '../components/ui/DynamicIcon'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useAchievements } from '../hooks/useAchievements'
-import { ACHIEVEMENTS } from '../lib/achievements'
+import { ACHIEVEMENT_FAMILIES, TOTAL_LEVELS, familyProgress } from '../lib/achievements'
 import { todayStr } from '../lib/dateUtils'
-import type { AchievementDef, AchievementStats, SettingsState } from '../types'
+import type { AchievementFamily, AchievementStats, SettingsState } from '../types'
 import { Sun, Moon, Monitor } from 'lucide-react'
 
 const THEME_OPTIONS: { label: string; value: SettingsState['theme']; icon: typeof Sun }[] = [
@@ -32,7 +30,12 @@ function isInstallableIOS() {
 
 export function YouScreen() {
   const { userName, dailyGoal, theme, setUserName, setDailyGoal, setTheme } = useSettingsStore()
-  const { unlocked, stats } = useAchievements()
+  const { stats } = useAchievements()
+
+  // Level is simply how many tiers you've cleared across every family
+  const level = stats
+    ? ACHIEVEMENT_FAMILIES.reduce((n, f) => n + familyProgress(f, stats).level, 0)
+    : 0
 
   // Real tenure: the first thing ever recorded on this device
   const memberSince = useLiveQuery(async () => {
@@ -58,8 +61,6 @@ export function YouScreen() {
       ) + 1
     return Math.round(stats.totalReps / Math.max(days / 7, 1))
   })()
-
-  const unlockedKeys = new Set(unlocked.map((a) => a.key))
 
   const bento = [
     { label: 'Total reps', value: stats?.totalReps ?? 0 },
@@ -160,6 +161,10 @@ export function YouScreen() {
               : 'Just getting started'}
           </p>
         </div>
+        <div className="ml-auto text-right shrink-0">
+          <p className="num-md text-accent">{level}</p>
+          <p className="type-caption text-text-faint">of {TOTAL_LEVELS} levels</p>
+        </div>
       </header>
 
       <div className="grid grid-cols-2 gap-3">
@@ -178,15 +183,13 @@ export function YouScreen() {
       </div>
 
       <section>
-        <h2 className="type-heading text-text mb-2">Achievements</h2>
+        <div className="flex items-baseline justify-between mb-2">
+          <h2 className="type-heading text-text">Progression</h2>
+          <span className="type-caption text-text-faint">Level {level}</span>
+        </div>
         <div className="grid grid-cols-2 gap-3">
-          {ACHIEVEMENTS.map((a) => (
-            <AchievementBadge
-              key={a.key}
-              def={a}
-              isUnlocked={unlockedKeys.has(a.key)}
-              stats={stats}
-            />
+          {ACHIEVEMENT_FAMILIES.map((family) => (
+            <FamilyBadge key={family.key} family={family} stats={stats} />
           ))}
         </div>
       </section>
@@ -276,39 +279,25 @@ export function YouScreen() {
   )
 }
 
-/** Ring badge: unlocked = closed bright ring; locked = live progress arc + n/m caption. */
-function AchievementBadge({
-  def,
-  isUnlocked,
-  stats,
-}: {
-  def: AchievementDef
-  isUnlocked: boolean
-  stats?: AchievementStats
-}) {
-  const prog = stats ? def.progress(stats) : { current: 0, target: 1 }
-  const frac = isUnlocked ? 1 : prog.target > 0 ? prog.current / prog.target : 0
+/**
+ * One badge per family: the ring fills toward the next tier, the caption names
+ * what you're chasing and how far off it is. Maxed families close the ring in
+ * the bright accent.
+ */
+function FamilyBadge({ family, stats }: { family: AchievementFamily; stats?: AchievementStats }) {
+  const p = stats
+    ? familyProgress(family, stats)
+    : { level: 0, fraction: 0, current: 0, next: family.tiers[0], earned: null, maxed: false }
+
   const size = 56
   const stroke = 4
   const r = (size - stroke) / 2
   const c = 2 * Math.PI * r
-
-  // Springs in when it unlocks while you're watching
-  const controls = useAnimation()
-  const prevUnlocked = useRef(isUnlocked)
-  useEffect(() => {
-    if (!prevUnlocked.current && isUnlocked) {
-      controls.start({
-        scale: [0.8, 1.12, 1],
-        transition: { type: 'spring', stiffness: 300, damping: 18 },
-      })
-    }
-    prevUnlocked.current = isUnlocked
-  }, [isUnlocked, controls])
+  const started = p.level > 0
 
   return (
     <div className="flex flex-col items-center text-center gap-1 p-3 bg-surface border border-hairline rounded-[var(--radius-tile)]">
-      <motion.div animate={controls} className="relative" style={{ width: size, height: size }}>
+      <div className="relative" style={{ width: size, height: size }}>
         <svg width={size} height={size} className="-rotate-90">
           <circle
             cx={size / 2}
@@ -318,7 +307,7 @@ function AchievementBadge({
             strokeWidth={stroke}
             className="stroke-ring-track"
           />
-          {frac > 0 && (
+          {p.fraction > 0 && (
             <circle
               cx={size / 2}
               cy={size / 2}
@@ -327,25 +316,35 @@ function AchievementBadge({
               strokeWidth={stroke}
               strokeLinecap="round"
               strokeDasharray={c}
-              strokeDashoffset={c * (1 - Math.min(frac, 1))}
-              className={isUnlocked ? 'stroke-accent-bright' : 'stroke-accent'}
+              strokeDashoffset={c * (1 - p.fraction)}
+              className={p.maxed ? 'stroke-ember' : 'stroke-accent'}
             />
           )}
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
           <DynamicIcon
-            name={def.icon}
+            name={family.icon}
             size={20}
-            className={isUnlocked ? 'text-accent' : 'text-text-faint'}
+            className={started ? 'text-accent' : 'text-text-faint'}
           />
         </div>
-      </motion.div>
-      <p className="type-label text-text">{def.name}</p>
+        {started && (
+          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 rounded-full bg-surface-2 border border-hairline type-caption text-text-mute">
+            {p.level}
+          </span>
+        )}
+      </div>
+
+      <p className="type-label text-text mt-1">{family.name}</p>
       <p className="type-caption text-text-faint">
-        {!isUnlocked && prog.target > 1
-          ? `${prog.current.toLocaleString()}/${prog.target.toLocaleString()}`
-          : def.description}
+        {p.maxed
+          ? `Maxed · ${p.earned?.name}`
+          : `${p.current.toLocaleString()} / ${p.next!.value.toLocaleString()}`}
       </p>
+      {!p.maxed && (
+        <p className="type-caption text-text-faint/70 truncate max-w-full">{p.next!.name}</p>
+      )}
     </div>
   )
 }
+

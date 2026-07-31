@@ -3,6 +3,8 @@ import { Outlet } from 'react-router-dom'
 import { TabBar } from '../components/navigation/TabBar'
 import { SnackbarHost } from '../components/ui/Snackbar'
 import { AchievementWatcher } from '../components/AchievementWatcher'
+import { GoalWatcher } from '../components/GoalWatcher'
+import { StreakCelebration } from '../components/StreakCelebration'
 import { LoggerHost } from '../modals/LoggerHost'
 import { OnboardingSheet } from '../modals/OnboardingSheet'
 import { useLoggerStore } from '../stores/loggerStore'
@@ -23,8 +25,10 @@ export function Layout() {
       </main>
       <SnackbarHost />
       <AchievementWatcher />
+      <GoalWatcher />
       <LoggerHost />
       <OnboardingSheet />
+      <StreakCelebration />
       <TabBar />
     </div>
   )

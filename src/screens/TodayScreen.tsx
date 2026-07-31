@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion, AnimatePresence } from 'motion/react'
 import { Link } from 'react-router-dom'
@@ -14,6 +14,7 @@ import { LogRow } from '../components/exercise/LogRow'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useDayStore } from '../stores/dayStore'
 import { useLoggerStore } from '../stores/loggerStore'
+import { useCelebrationStore } from '../stores/celebrationStore'
 import { useHaptic } from '../hooks/useHaptic'
 import { getGreeting, todayStr, formatDate } from '../lib/dateUtils'
 import type { Exercise, Session } from '../types'
@@ -28,7 +29,6 @@ export function TodayScreen() {
   const snackbar = useSnackbar()
   const haptic = useHaptic()
   const lastKnownToday = useRef(todayStr())
-  const [celebrating, setCelebrating] = useState(false)
   const isToday = selectedDate === todayStr()
 
   // A resumed PWA keeps state across midnight — follow the day forward,
@@ -82,20 +82,8 @@ export function TodayScreen() {
 
   const dayTotal = dayRows?.reduce((sum, r) => sum + r.session.reps, 0) ?? 0
   const goalMet = dayTotal >= dailyGoal
-
-  // Goal crossed → ember sweep + success haptic, once per day
-  useEffect(() => {
-    if (!isToday || dayRows === undefined || !goalMet) return
-    const today = todayStr()
-    const { lastGoalCelebration, setLastGoalCelebration } = useSettingsStore.getState()
-    if (lastGoalCelebration === today) return
-    setLastGoalCelebration(today)
-    haptic.success()
-    setCelebrating(true)
-    const t = setTimeout(() => setCelebrating(false), 1500)
-    return () => clearTimeout(t)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [goalMet, isToday, dayRows === undefined])
+  // GoalWatcher (in the shell) owns the moment; the ring just sweeps along
+  const celebrating = useCelebrationStore((s) => s.open)
 
   const repsByExercise = new Map<number, number>()
   for (const { session } of dayRows ?? []) {

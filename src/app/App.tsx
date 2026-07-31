@@ -5,6 +5,8 @@ import { useTheme } from '../hooks/useTheme'
 import { seedDatabase } from '../db/seed'
 import { db } from '../db/database'
 import { StorageUnavailable } from '../components/StorageUnavailable'
+import { useSettingsStore } from '../stores/settingsStore'
+import { todayStr } from '../lib/dateUtils'
 
 type Health = 'checking' | 'ok' | 'unavailable'
 
@@ -35,6 +37,18 @@ export default function App() {
       // Seeding failing is survivable (existing data still loads) and retries
       // on the next launch, so it never blocks the UI.
       seedDatabase().catch((err) => console.error('Seeding failed:', err))
+
+      // Devices that logged before goal history existed get one period opened
+      // at their earliest session, so old days are judged against the goal
+      // they're using today rather than against nothing.
+      try {
+        if (useSettingsStore.getState().goalHistory.length === 0) {
+          const first = await db.sessions.orderBy('date').first()
+          useSettingsStore.getState().seedGoalHistory(first?.date ?? todayStr())
+        }
+      } catch (err) {
+        console.error('Goal history backfill failed:', err)
+      }
     }
 
     boot()

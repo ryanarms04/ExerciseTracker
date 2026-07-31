@@ -7,7 +7,13 @@ class ExerciseTrackerDB extends Dexie {
   achievements!: Table<Achievement, number>
 
   constructor() {
-    super('ExerciseTrackerDB')
+    // cache: 'disabled' turns off Dexie's optimistic query cache. With several
+    // live queries open and writes landing underneath them, that layer crashes
+    // inside applyOptimisticOps ("Cannot read properties of null (reading
+    // 'type')") and takes the whole screen down. Live queries still update —
+    // they simply re-read from IndexedDB instead of being patched in memory,
+    // which is free at this data size.
+    super('ExerciseTrackerDB', { cache: 'disabled' })
     this.version(1).stores({
       exercises: '++id, name, category, isCustom, isArchived',
       sessions: '++id, exerciseId, date, createdAt',

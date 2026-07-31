@@ -1,8 +1,9 @@
 import { db } from './database'
+import { LEGACY_KEY_MAP } from '../lib/achievements'
 import type { Exercise } from '../types'
 
 /** Bump when seeds or one-shot healings change; each version runs once per device. */
-const SEED_VERSION = 2
+const SEED_VERSION = 3
 const SEED_VERSION_KEY = 'exercise-tracker-seed-version'
 
 // Some browsers (private windows, in-app webviews) throw on localStorage access.
@@ -97,6 +98,24 @@ async function runSeed() {
     const situps = existing.find((e) => e.name === 'Sit-ups' && e.icon === 'flip-vertical')
     if (situps?.id) {
       await db.exercises.update(situps.id, { icon: 'flip-vertical-2' })
+    }
+  })
+
+  // v3: badges became tiered families. Rename earned rows onto their new keys
+  // so unlock dates survive; drop any row whose new key already exists.
+  await db.transaction('rw', db.achievements, async () => {
+    const rows = await db.achievements.toArray()
+    const taken = new Set(rows.map((r) => r.key))
+    for (const row of rows) {
+      const nextKey = LEGACY_KEY_MAP[row.key]
+      if (!nextKey || !row.id) continue
+      if (taken.has(nextKey)) {
+        await db.achievements.delete(row.id)
+      } else {
+        await db.achievements.update(row.id, { key: nextKey })
+        taken.delete(row.key)
+        taken.add(nextKey)
+      }
     }
   })
 
