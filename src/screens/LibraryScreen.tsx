@@ -2,7 +2,16 @@ import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'motion/react'
-import { ArrowLeft, MoreHorizontal, Plus, Pencil, Archive, Dumbbell } from 'lucide-react'
+import {
+  ArrowLeft,
+  MoreHorizontal,
+  Plus,
+  Pencil,
+  Archive,
+  ArchiveRestore,
+  ChevronDown,
+  Dumbbell,
+} from 'lucide-react'
 import { db } from '../db/database'
 import { DynamicIcon } from '../components/ui/DynamicIcon'
 import { SegmentedControl } from '../components/ui/SegmentedControl'
@@ -28,12 +37,20 @@ export function LibraryScreen() {
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Exercise | null>(null)
   const [menuFor, setMenuFor] = useState<number | null>(null)
+  const [showArchived, setShowArchived] = useState(false)
 
   const exercises = useLiveQuery(async () => {
     const all = await db.exercises.toArray()
     const active = all.filter((e) => !e.isArchived)
     return filter === 'all' ? active : active.filter((e) => e.category === filter)
   }, [filter])
+
+  // Archived exercises keep all their history — they're hidden, never deleted,
+  // so the library is the one place they can always be brought back.
+  const archived = useLiveQuery(async () => {
+    const all = await db.exercises.toArray()
+    return all.filter((e) => e.isArchived)
+  }, [])
 
   // One query feeds every tile: 7-day sparkline points AND today's count
   const today = todayStr()
@@ -55,6 +72,10 @@ export function LibraryScreen() {
   async function archiveExercise(ex: Exercise) {
     await db.exercises.update(ex.id!, { isArchived: true })
     setMenuFor(null)
+  }
+
+  async function restoreExercise(ex: Exercise) {
+    await db.exercises.update(ex.id!, { isArchived: false })
   }
 
   return (
@@ -194,6 +215,64 @@ export function LibraryScreen() {
               New exercise
             </button>
           </div>
+        )}
+
+        {archived && archived.length > 0 && (
+          <section className="mt-6">
+            <button
+              onClick={() => setShowArchived((v) => !v)}
+              aria-expanded={showArchived}
+              className="w-full min-h-11 flex items-center justify-between type-label text-text-mute"
+            >
+              <span>Archived ({archived.length})</span>
+              <ChevronDown
+                size={16}
+                className={`transition-transform ${showArchived ? 'rotate-180' : ''}`}
+              />
+            </button>
+
+            <AnimatePresence initial={false}>
+              {showArchived && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <p className="type-caption text-text-faint mb-2">
+                    Hidden from Today and the logger. Their history is untouched — restore
+                    one and it picks up exactly where it left off.
+                  </p>
+                  <div className="space-y-2 pb-2">
+                    {archived.map((ex) => (
+                      <div
+                        key={ex.id}
+                        className="flex items-center gap-3 p-2.5 bg-surface border border-hairline rounded-[var(--radius-tile)]"
+                      >
+                        <span
+                          className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 opacity-60"
+                          style={{ backgroundColor: ex.color + '1F', color: ex.color }}
+                        >
+                          <DynamicIcon name={ex.icon} size={16} />
+                        </span>
+                        <span className="type-label text-text-mute truncate flex-1">
+                          {ex.name}
+                        </span>
+                        <button
+                          onClick={() => restoreExercise(ex)}
+                          aria-label={`Restore ${ex.name}`}
+                          className="min-h-11 px-3 inline-flex items-center gap-1.5 rounded-full type-label text-accent"
+                        >
+                          <ArchiveRestore size={15} />
+                          Restore
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </section>
         )}
       </div>
 
