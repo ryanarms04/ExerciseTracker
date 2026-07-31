@@ -1,12 +1,14 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Link } from 'react-router-dom'
-import { Flame, ChevronRight, Download, Upload, Minus, Plus } from 'lucide-react'
+import { useState } from 'react'
+import { Flame, ChevronRight, Download, Upload, Minus, Plus, Trash2 } from 'lucide-react'
 import { db } from '../db/database'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { SectionLabel } from '../components/ui/SectionLabel'
 import { SegmentedControl } from '../components/ui/SegmentedControl'
 import { DynamicIcon } from '../components/ui/DynamicIcon'
+import { ResetDataSheet } from '../modals/ResetDataSheet'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useAchievements } from '../hooks/useAchievements'
 import { ACHIEVEMENT_FAMILIES, TOTAL_LEVELS, familyProgress } from '../lib/achievements'
@@ -31,6 +33,7 @@ function isInstallableIOS() {
 export function YouScreen() {
   const { userName, dailyGoal, theme, setUserName, setDailyGoal, setTheme } = useSettingsStore()
   const { stats } = useAchievements()
+  const [resetOpen, setResetOpen] = useState(false)
 
   // Level is simply how many tiers you've cleared across every family
   const level = stats
@@ -263,6 +266,13 @@ export function YouScreen() {
                 Import
               </Button>
             </div>
+            <button
+              onClick={() => setResetOpen(true)}
+              className="w-full min-h-11 mt-3 inline-flex items-center justify-center gap-2 rounded-full type-label text-danger"
+            >
+              <Trash2 size={15} />
+              Delete all data
+            </button>
           </div>
 
           {isInstallableIOS() && (
@@ -275,6 +285,12 @@ export function YouScreen() {
           </p>
         </div>
       </section>
+
+      <ResetDataSheet
+        open={resetOpen}
+        onClose={() => setResetOpen(false)}
+        onExport={handleExport}
+      />
     </div>
   )
 }
