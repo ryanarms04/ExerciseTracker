@@ -44,6 +44,16 @@ export class ErrorBoundary extends Component<Props, State> {
               </Button>
               <Button onClick={() => window.location.reload()}>Reload app</Button>
             </div>
+            <button
+              onClick={() =>
+                navigator.clipboard?.writeText(
+                  `${err.name}: ${err.message}\n${err.stack ?? ''}\n${navigator.userAgent}`,
+                )
+              }
+              className="min-h-11 w-full type-label text-text-faint"
+            >
+              Copy error details
+            </button>
           </Card>
         </div>
       )

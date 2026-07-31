@@ -5,6 +5,25 @@ import type { Exercise } from '../types'
 const SEED_VERSION = 2
 const SEED_VERSION_KEY = 'exercise-tracker-seed-version'
 
+// Some browsers (private windows, in-app webviews) throw on localStorage access.
+// The version marker is an optimisation, not a correctness requirement — seeding
+// is idempotent — so a blocked store just means we re-run the checks each launch.
+function readSeedVersion(): number {
+  try {
+    return Number(localStorage.getItem(SEED_VERSION_KEY) ?? 0)
+  } catch {
+    return 0
+  }
+}
+
+function writeSeedVersion() {
+  try {
+    localStorage.setItem(SEED_VERSION_KEY, String(SEED_VERSION))
+  } catch {
+    /* nothing to do — seeding stays idempotent */
+  }
+}
+
 const DEFAULT_EXERCISES: Omit<Exercise, 'id'>[] = [
   { name: 'Push-ups', category: 'upper', icon: 'chevrons-up', color: '#0EA5A2', isCustom: false, isArchived: false, createdAt: new Date().toISOString() },
   { name: 'Tricep Dips', category: 'upper', icon: 'arrow-down-to-line', color: '#2ECFCC', isCustom: false, isArchived: false, createdAt: new Date().toISOString() },
@@ -28,12 +47,17 @@ let seeding: Promise<void> | null = null
  * run into a single pass.
  */
 export function seedDatabase() {
-  seeding ??= runSeed()
+  seeding ??= runSeed().catch((err) => {
+    // Don't cache a failure: a transient error (storage pressure, a blocked
+    // upgrade) must not leave the app permanently unseeded for this session.
+    seeding = null
+    throw err
+  })
   return seeding
 }
 
 async function runSeed() {
-  if (Number(localStorage.getItem(SEED_VERSION_KEY) ?? 0) >= SEED_VERSION) return
+  if (readSeedVersion() >= SEED_VERSION) return
 
   await db.transaction('rw', db.exercises, async () => {
     // v2: "Plank (seconds)" becomes a real duration exercise. Runs BEFORE the
@@ -76,5 +100,5 @@ async function runSeed() {
     }
   })
 
-  localStorage.setItem(SEED_VERSION_KEY, String(SEED_VERSION))
+  writeSeedVersion()
 }
