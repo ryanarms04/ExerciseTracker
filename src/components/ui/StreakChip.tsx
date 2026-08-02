@@ -28,10 +28,13 @@ const STREAK_TIERS = ACHIEVEMENT_FAMILIES.find((f) => f.key === 'streak')?.tiers
 const BACKLIGHT =
   'radial-gradient(circle, transparent 20%, currentColor 46%, transparent 74%)'
 
-// Bright value first: when an animation can't tick, Motion parks on the LAST
-// keyframe, so ending dim means a frozen glow stays out of the flame's way.
-const GLOW_BREATH = { opacity: [0.62, 0.28], scale: [1.1, 0.94] }
-const GLOW_DIM = { opacity: 0.14, scale: 1 }
+// Dim value first so the loop starts by swelling. NEVER pair these with
+// `initial={false}`: that tells Motion to skip the animation and jump to the
+// final keyframe, which silently turns the whole pulse into a static value.
+const GLOW_BREATH = { opacity: [0.28, 0.62], scale: [0.94, 1.1] }
+// Embers still glow when the fire is out — a dormant backlight breathes too,
+// just faintly. A dead-static glow reads as a broken effect.
+const GLOW_DIM = { opacity: [0.1, 0.26], scale: [0.96, 1.06] }
 // Mirroring doubles the cycle: 1.6s each way is a ~3.2s breath, close to a
 // resting human one and slow enough to read as glowing rather than flashing.
 const BREATH_TRANSITION = {
@@ -145,9 +148,8 @@ export function StreakChip() {
                     opacity: lit ? 0.45 : 0.14,
                     willChange: 'opacity, transform',
                   }}
-                  initial={false}
                   animate={lit ? GLOW_BREATH : GLOW_DIM}
-                  transition={lit ? BREATH_TRANSITION : undefined}
+                  transition={BREATH_TRANSITION}
                 />
                 {lit &&
                   [0, 1, 2].map((i) => (
