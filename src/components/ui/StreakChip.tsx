@@ -15,9 +15,12 @@ const STREAK_TIERS = ACHIEVEMENT_FAMILIES.find((f) => f.key === 'streak')?.tiers
  * the tween forwards then backwards — a genuine ping-pong. A three-keyframe
  * `loop` looks the same on paper but seams at the wrap, which reads as a blink.
  */
+/** Warm amber — deliberately lighter than the ember flame it sits behind. */
+const HALO_COLOR = '#FFA23A'
+
 // Bright value first: when an animation can't tick, Motion parks on the LAST
 // keyframe, so ending dim means a frozen glow stays out of the flame's way.
-const GLOW_BREATH = { opacity: [0.62, 0.3], scale: [1.14, 1] }
+const GLOW_BREATH = { opacity: [0.5, 0.26], scale: [1.12, 1] }
 const GLOW_DIM = { opacity: 0.12, scale: 1 }
 // Mirroring doubles the cycle: 1.6s each way is a ~3.2s breath, close to a
 // resting human one and slow enough to read as glowing rather than flashing.
@@ -119,12 +122,12 @@ export function StreakChip() {
             >
               <div className="relative flex justify-center mb-3" aria-hidden>
                 <motion.div
-                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-ember blur-xl"
-                  // The resting opacity is set in style, not left to the
-                  // animation: if the loop never runs (reduced motion, a paused
-                  // frame loop) an unstyled glow sits at full strength and, being
-                  // the same ember as the flame, swallows it completely.
-                  style={{ opacity: lit ? 0.42 : 0.12 }}
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11 h-11 rounded-full blur-lg"
+                  // A halo, not a cloud: amber rather than the flame's ember, so
+                  // the flame always has something to read against — same-colour
+                  // glow behind a same-colour flame is invisible at any strength.
+                  // Resting opacity lives here, never left to the animation to set.
+                  style={{ backgroundColor: HALO_COLOR, opacity: lit ? 0.4 : 0.1 }}
                   initial={false}
                   animate={lit ? GLOW_BREATH : GLOW_DIM}
                   transition={lit ? BREATH_TRANSITION : undefined}
