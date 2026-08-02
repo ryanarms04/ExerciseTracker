@@ -47,12 +47,18 @@ export function StreakCelebration() {
           transition={{ duration: 0.25 }}
           className="fixed inset-0 z-[60] flex flex-col items-center justify-center px-8 bg-[#07060B]/95 backdrop-blur-sm"
         >
-          {/* heat haze behind everything — mirrored so it breathes, never blinks */}
+          {/* Heat haze: a gradient, not a blurred disc. Animating scale on a
+              blur() re-rasterizes the gaussian every frame and stutters on a
+              phone — the gradient is painted once and rides the compositor. */}
           <motion.div
             aria-hidden
-            className="absolute w-72 h-72 rounded-full blur-3xl"
-            style={{ backgroundColor: FLAME_OUTER, opacity: 0.28 }}
-            animate={{ scale: [1, 1.18], opacity: [0.22, 0.38] }}
+            className="absolute w-80 h-80"
+            style={{
+              backgroundImage: `radial-gradient(circle, ${FLAME_OUTER} 0%, transparent 68%)`,
+              opacity: 0.28,
+              willChange: 'opacity, transform',
+            }}
+            animate={{ scale: [1, 1.18], opacity: [0.22, 0.4] }}
             transition={{
               // ~2.6s per breath, so the haze swells twice while the moment lasts
               duration: 1.3,
