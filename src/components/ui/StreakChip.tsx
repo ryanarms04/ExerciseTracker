@@ -80,11 +80,17 @@ export function StreakChip() {
   const nextTier = STREAK_TIERS.find((t) => t.value > current)
   const remaining = Math.max(todayGoal - todayReps, 0)
 
+  // Always name what's actually been counted today — "hit 50 reps" alone left
+  // no way to tell whether the app had registered anything at all.
   const statusLine = todayMet
     ? "Today's goal is done — the flame is safe."
-    : current === 0
-      ? `Hit ${todayGoal} reps today to light the flame.`
-      : `${remaining} more reps today or the streak resets.`
+    : todayReps > 0
+      ? current === 0
+        ? `${todayReps} of ${todayGoal} today — ${remaining} more to light the flame.`
+        : `${todayReps} of ${todayGoal} today — ${remaining} more or the streak resets.`
+      : current === 0
+        ? `Hit ${todayGoal} reps today to light the flame.`
+        : `Nothing logged today — ${todayGoal} reps keeps the streak alive.`
 
   return (
     <div className="relative">
@@ -146,14 +152,14 @@ export function StreakChip() {
                 <motion.div
                   animate={lit ? FLAME_FLICKER : FLAME_STILL}
                   transition={lit ? FLICKER_TRANSITION : undefined}
-                  className={`relative z-10 ${lit ? 'text-ember' : 'text-text-mute'}`}
+                  // Dormant is still fire — a dimmed ember silhouette reads as
+                  // "waiting to be lit". A grey outline just reads as broken.
+                  className={`relative z-10 ${lit ? 'text-ember' : 'text-ember/35'}`}
                 >
                   <Flame
                     size={40}
-                    strokeWidth={lit ? 1.5 : 2}
-                    fill={lit ? 'currentColor' : 'none'}
-                    // An unlit flame still has to look like a flame, not like a
-                    // failed render — outlined and legible, just not burning.
+                    strokeWidth={1.5}
+                    fill="currentColor"
                     className={lit ? 'drop-shadow-[0_0_6px_rgb(255_138_92/0.55)]' : ''}
                   />
                 </motion.div>
