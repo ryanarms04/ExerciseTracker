@@ -15,7 +15,9 @@ const STREAK_TIERS = ACHIEVEMENT_FAMILIES.find((f) => f.key === 'streak')?.tiers
  * the tween forwards then backwards — a genuine ping-pong. A three-keyframe
  * `loop` looks the same on paper but seams at the wrap, which reads as a blink.
  */
-const GLOW_BREATH = { opacity: [0.3, 0.62], scale: [1, 1.14] }
+// Bright value first: when an animation can't tick, Motion parks on the LAST
+// keyframe, so ending dim means a frozen glow stays out of the flame's way.
+const GLOW_BREATH = { opacity: [0.62, 0.3], scale: [1.14, 1] }
 const GLOW_DIM = { opacity: 0.12, scale: 1 }
 // Mirroring doubles the cycle: 1.6s each way is a ~3.2s breath, close to a
 // resting human one and slow enough to read as glowing rather than flashing.
@@ -118,6 +120,12 @@ export function StreakChip() {
               <div className="relative flex justify-center mb-3" aria-hidden>
                 <motion.div
                   className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-ember blur-xl"
+                  // The resting opacity is set in style, not left to the
+                  // animation: if the loop never runs (reduced motion, a paused
+                  // frame loop) an unstyled glow sits at full strength and, being
+                  // the same ember as the flame, swallows it completely.
+                  style={{ opacity: lit ? 0.42 : 0.12 }}
+                  initial={false}
                   animate={lit ? GLOW_BREATH : GLOW_DIM}
                   transition={lit ? BREATH_TRANSITION : undefined}
                 />
@@ -131,12 +139,20 @@ export function StreakChip() {
                       transition={{ ...EMBER_TRANSITION, delay: i * 0.45 }}
                     />
                   ))}
+                {/* relative + z-10: the flame always sits above its own glow */}
                 <motion.div
                   animate={lit ? FLAME_FLICKER : FLAME_STILL}
                   transition={lit ? FLICKER_TRANSITION : undefined}
-                  className={lit ? 'text-ember' : 'text-text-faint'}
+                  className={`relative z-10 ${lit ? 'text-ember' : 'text-text-mute'}`}
                 >
-                  <Flame size={40} fill={lit ? 'currentColor' : 'none'} />
+                  <Flame
+                    size={40}
+                    strokeWidth={lit ? 1.5 : 2}
+                    fill={lit ? 'currentColor' : 'none'}
+                    // An unlit flame still has to look like a flame, not like a
+                    // failed render — outlined and legible, just not burning.
+                    className={lit ? 'drop-shadow-[0_0_6px_rgb(255_138_92/0.55)]' : ''}
+                  />
                 </motion.div>
               </div>
 
