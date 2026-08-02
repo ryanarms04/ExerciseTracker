@@ -24,15 +24,25 @@ const STREAK_TIERS = ACHIEVEMENT_FAMILIES.find((f) => f.key === 'streak')?.tiers
  * frame, which drops frames on a phone and makes the pulse stutter. A gradient
  * is painted once, so the pulse only moves opacity and transform.
  */
-const BACKLIGHT = 'radial-gradient(circle, currentColor 0%, transparent 68%)'
+// Two falloffs stacked: a small core plus a wide, weak skirt. A single linear
+// ramp ends at one radius and the eye reads that as the edge of a circle;
+// overlapping two of different widths approximates a gaussian, so the light
+// just fades out.
+// `closest-side` sizes each circle to half the box width, so the light reaches
+// zero exactly at the edge — without it the gradient stretches to the corners
+// and the square element itself becomes visible as a soft rectangle.
+const BACKLIGHT = [
+  'radial-gradient(circle closest-side, currentColor 0%, transparent 58%)',
+  'radial-gradient(circle closest-side, currentColor 0%, transparent 100%)',
+].join(', ')
 
 // Dim value first so the loop starts by swelling. NEVER pair these with
 // `initial={false}`: that tells Motion to skip the animation and jump to the
 // final keyframe, which silently turns the whole pulse into a static value.
-const GLOW_BREATH = { opacity: [0.28, 0.62], scale: [0.94, 1.1] }
+const GLOW_BREATH = { opacity: [0.16, 0.34], scale: [0.96, 1.08] }
 // Embers still glow when the fire is out — a dormant backlight breathes too,
 // just faintly. A dead-static glow reads as a broken effect.
-const GLOW_DIM = { opacity: [0.1, 0.26], scale: [0.96, 1.06] }
+const GLOW_DIM = { opacity: [0.05, 0.13], scale: [0.98, 1.05] }
 // Mirroring doubles the cycle: 1.6s each way is a ~3.2s breath, close to a
 // resting human one and slow enough to read as glowing rather than flashing.
 const BREATH_TRANSITION = {
@@ -143,7 +153,8 @@ export function StreakChip() {
                   style={{
                     backgroundImage: BACKLIGHT,
                     // Resting value lives here, never left to the animation to set
-                    opacity: lit ? 0.45 : 0.14,
+                    // Mid-range of the pulse, so a frozen glow matches its average
+                    opacity: lit ? 0.25 : 0.09,
                     willChange: 'opacity, transform',
                   }}
                   animate={lit ? GLOW_BREATH : GLOW_DIM}
