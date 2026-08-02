@@ -15,13 +15,23 @@ const STREAK_TIERS = ACHIEVEMENT_FAMILIES.find((f) => f.key === 'streak')?.tiers
  * the tween forwards then backwards — a genuine ping-pong. A three-keyframe
  * `loop` looks the same on paper but seams at the wrap, which reads as a blink.
  */
-/** Warm amber — deliberately lighter than the ember flame it sits behind. */
-const HALO_COLOR = '#FFA23A'
+/**
+ * The backlight is a radial gradient, not a blurred circle. Animating a
+ * `blur()` element forces the browser to re-rasterize the whole gaussian on
+ * every frame — expensive enough on a phone to drop frames, which is what made
+ * the old pulse stutter and snap. A gradient is painted once, so the pulse only
+ * touches opacity and transform and stays on the compositor.
+ *
+ * It's a ring rather than a disc: transparent at the centre, so light spills
+ * AROUND the flame instead of washing out a same-coloured silhouette.
+ */
+const BACKLIGHT =
+  'radial-gradient(circle, transparent 20%, currentColor 46%, transparent 74%)'
 
 // Bright value first: when an animation can't tick, Motion parks on the LAST
 // keyframe, so ending dim means a frozen glow stays out of the flame's way.
-const GLOW_BREATH = { opacity: [0.5, 0.26], scale: [1.12, 1] }
-const GLOW_DIM = { opacity: 0.12, scale: 1 }
+const GLOW_BREATH = { opacity: [0.62, 0.28], scale: [1.1, 0.94] }
+const GLOW_DIM = { opacity: 0.14, scale: 1 }
 // Mirroring doubles the cycle: 1.6s each way is a ~3.2s breath, close to a
 // resting human one and slow enough to read as glowing rather than flashing.
 const BREATH_TRANSITION = {
@@ -128,12 +138,13 @@ export function StreakChip() {
             >
               <div className="relative flex justify-center mb-3" aria-hidden>
                 <motion.div
-                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11 h-11 rounded-full blur-lg"
-                  // A halo, not a cloud: amber rather than the flame's ember, so
-                  // the flame always has something to read against — same-colour
-                  // glow behind a same-colour flame is invisible at any strength.
-                  // Resting opacity lives here, never left to the animation to set.
-                  style={{ backgroundColor: HALO_COLOR, opacity: lit ? 0.4 : 0.1 }}
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 text-ember"
+                  style={{
+                    backgroundImage: BACKLIGHT,
+                    // Resting value lives here, never left to the animation to set
+                    opacity: lit ? 0.45 : 0.14,
+                    willChange: 'opacity, transform',
+                  }}
                   initial={false}
                   animate={lit ? GLOW_BREATH : GLOW_DIM}
                   transition={lit ? BREATH_TRANSITION : undefined}
