@@ -16,17 +16,15 @@ const STREAK_TIERS = ACHIEVEMENT_FAMILIES.find((f) => f.key === 'streak')?.tiers
  * `loop` looks the same on paper but seams at the wrap, which reads as a blink.
  */
 /**
- * The backlight is a radial gradient, not a blurred circle. Animating a
- * `blur()` element forces the browser to re-rasterize the whole gaussian on
- * every frame — expensive enough on a phone to drop frames, which is what made
- * the old pulse stutter and snap. A gradient is painted once, so the pulse only
- * touches opacity and transform and stays on the compositor.
+ * A soft backlight behind the flame — brightest at the centre, falling off to
+ * nothing, which is what a blurred disc looked like before.
  *
- * It's a ring rather than a disc: transparent at the centre, so light spills
- * AROUND the flame instead of washing out a same-coloured silhouette.
+ * It's a radial gradient rather than an actual `blur()` because animating a
+ * blurred element forces the browser to re-rasterize the whole gaussian every
+ * frame, which drops frames on a phone and makes the pulse stutter. A gradient
+ * is painted once, so the pulse only moves opacity and transform.
  */
-const BACKLIGHT =
-  'radial-gradient(circle, transparent 20%, currentColor 46%, transparent 74%)'
+const BACKLIGHT = 'radial-gradient(circle, currentColor 0%, transparent 68%)'
 
 // Dim value first so the loop starts by swelling. NEVER pair these with
 // `initial={false}`: that tells Motion to skip the animation and jump to the
