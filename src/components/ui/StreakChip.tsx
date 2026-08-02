@@ -8,6 +8,34 @@ import { ACHIEVEMENT_FAMILIES } from '../../lib/achievements'
 const STREAK_TIERS = ACHIEVEMENT_FAMILIES.find((f) => f.key === 'streak')?.tiers ?? []
 
 /**
+ * Looping animations are declared once at module scope so a re-render can't
+ * hand Motion a fresh target object and restart the loop mid-breath.
+ *
+ * The glow breathes with two keyframes and `repeatType: 'mirror'`, which plays
+ * the tween forwards then backwards — a genuine ping-pong. A three-keyframe
+ * `loop` looks the same on paper but seams at the wrap, which reads as a blink.
+ */
+const GLOW_BREATH = { opacity: [0.3, 0.62], scale: [1, 1.14] }
+const GLOW_DIM = { opacity: 0.12, scale: 1 }
+// Mirroring doubles the cycle: 1.6s each way is a ~3.2s breath, close to a
+// resting human one and slow enough to read as glowing rather than flashing.
+const BREATH_TRANSITION = {
+  duration: 1.6,
+  repeat: Infinity,
+  repeatType: 'mirror',
+  ease: 'easeInOut',
+} as const
+
+const EMBER_RISE = { y: [0, -26], opacity: [0, 0.9, 0], scale: [1, 0.5] }
+const EMBER_TRANSITION = { duration: 1.4, repeat: Infinity, ease: 'easeOut' } as const
+
+// Flickering is meant to be irregular, so it keeps its multi-step loop — it
+// starts and ends at rest, so the wrap is already seamless.
+const FLAME_FLICKER = { scale: [1, 1.08, 0.97, 1.05, 1], rotate: [0, -3, 2, -2, 0] }
+const FLAME_STILL = { scale: 1, rotate: 0 }
+const FLICKER_TRANSITION = { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } as const
+
+/**
  * 🔥 n — ember ring while a streak is alive; pulses once when it grows.
  * Tap for the fire: an animated flame, what keeps the streak alive today,
  * and the next rung on the streak ladder.
@@ -90,8 +118,8 @@ export function StreakChip() {
               <div className="relative flex justify-center mb-3" aria-hidden>
                 <motion.div
                   className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-ember blur-xl"
-                  animate={{ opacity: lit ? [0.35, 0.6, 0.35] : 0.12, scale: [1, 1.15, 1] }}
-                  transition={{ duration: 1.8, repeat: Infinity }}
+                  animate={lit ? GLOW_BREATH : GLOW_DIM}
+                  transition={lit ? BREATH_TRANSITION : undefined}
                 />
                 {lit &&
                   [0, 1, 2].map((i) => (
@@ -99,17 +127,13 @@ export function StreakChip() {
                       key={i}
                       className="absolute bottom-2 w-1 h-1 rounded-full bg-ember"
                       style={{ left: `${42 + i * 8}%` }}
-                      animate={{ y: [0, -26], opacity: [0, 0.9, 0], scale: [1, 0.5] }}
-                      transition={{ duration: 1.4, repeat: Infinity, delay: i * 0.45 }}
+                      animate={EMBER_RISE}
+                      transition={{ ...EMBER_TRANSITION, delay: i * 0.45 }}
                     />
                   ))}
                 <motion.div
-                  animate={
-                    lit
-                      ? { scale: [1, 1.08, 0.97, 1.05, 1], rotate: [0, -3, 2, -2, 0] }
-                      : { scale: 1 }
-                  }
-                  transition={{ duration: 1.6, repeat: Infinity }}
+                  animate={lit ? FLAME_FLICKER : FLAME_STILL}
+                  transition={lit ? FLICKER_TRANSITION : undefined}
                   className={lit ? 'text-ember' : 'text-text-faint'}
                 >
                   <Flame size={40} fill={lit ? 'currentColor' : 'none'} />

@@ -47,13 +47,19 @@ export function StreakCelebration() {
           transition={{ duration: 0.25 }}
           className="fixed inset-0 z-[60] flex flex-col items-center justify-center px-8 bg-[#07060B]/95 backdrop-blur-sm"
         >
-          {/* heat haze behind everything */}
+          {/* heat haze behind everything — mirrored so it breathes, never blinks */}
           <motion.div
             aria-hidden
             className="absolute w-72 h-72 rounded-full blur-3xl"
             style={{ backgroundColor: FLAME_OUTER, opacity: 0.28 }}
-            animate={{ scale: [1, 1.18, 1], opacity: [0.22, 0.36, 0.22] }}
-            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+            animate={{ scale: [1, 1.18], opacity: [0.22, 0.38] }}
+            transition={{
+              // ~2.6s per breath, so the haze swells twice while the moment lasts
+              duration: 1.3,
+              repeat: Infinity,
+              repeatType: 'mirror',
+              ease: 'easeInOut',
+            }}
           />
 
           <motion.div

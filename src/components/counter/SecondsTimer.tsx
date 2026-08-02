@@ -71,7 +71,7 @@ export function SecondsTimer({ size, count, running, onToggle, onTick, color = '
           transform={`rotate(-90 ${center} ${center})`}
           opacity={0.7}
         />
-        {/* breathing halo while the clock runs */}
+        {/* breathing halo while the clock runs — mirrored, so no seam at the wrap */}
         {running && (
           <motion.circle
             cx={center}
@@ -81,8 +81,13 @@ export function SecondsTimer({ size, count, running, onToggle, onTick, color = '
             stroke={color}
             strokeWidth={2}
             initial={{ opacity: 0.5, scale: 1 }}
-            animate={{ opacity: [0.5, 0.15, 0.5], scale: [1, 1.05, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
+            animate={{ opacity: [0.5, 0.15], scale: [1, 1.05] }}
+            transition={{
+              duration: 1.4,
+              repeat: Infinity,
+              repeatType: 'mirror',
+              ease: 'easeInOut',
+            }}
             style={{ transformOrigin: 'center' }}
           />
         )}
